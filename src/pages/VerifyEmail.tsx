@@ -85,11 +85,11 @@ export default function VerifyEmail() {
                     />
                 </div>
                 {error && (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm text-red-700">
                         {error}
                     </p>
                 )}
-                {message && <p className="text-sm text-emerald-300">{message}</p>}
+                {message && <p className="text-sm text-emerald-700">{message}</p>}
                 <button type="submit" disabled={submitting} className={primaryButtonClass}>
                     {submitting ? 'Verifying…' : 'Verify email'}
                 </button>
@@ -105,7 +105,7 @@ export default function VerifyEmail() {
                 Resend code
             </button>
 
-            <p className="mt-4 text-center text-sm text-silver/70">
+            <p className="mt-4 text-center text-sm text-ink/60">
                 <Link to="/login" className={linkClass}>
                     Back to log in
                 </Link>

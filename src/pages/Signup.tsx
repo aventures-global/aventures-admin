@@ -91,7 +91,7 @@ export default function Signup() {
                 </div>
 
                 {formError && (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm text-red-700">
                         {formError}
                     </p>
                 )}
@@ -111,7 +111,7 @@ export default function Signup() {
                 Continue with Google
             </button>
 
-            <p className="mt-4 text-center text-sm text-silver/70">
+            <p className="mt-4 text-center text-sm text-ink/60">
                 Already have an account?{' '}
                 <Link to={`/login?next=${encodeURIComponent(next)}`} className={linkClass}>
                     Log in

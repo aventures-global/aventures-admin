@@ -1,6 +1,38 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
+@font-face {
+  font-family: "LeJourScript";
+  src: url("/assets/fonts/LeJourSerif.otf") format("opentype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Noto Serif";
+  src: url("/assets/fonts/Noto_Serif_Display/NotoSerifDisplay-VariableFont_wdth,wght.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("/assets/fonts/Poppins/Poppins-Regular.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("/assets/fonts/Poppins/Poppins-Medium.ttf") format("truetype");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500 700;
+}
+
 @theme {
   --color-ink: #0b0b0b;
   --color-ink-soft: #141414;
@@ -11,6 +43,11 @@
   --color-gold-mid: #ffc300;
   --color-gold-deep: #ffb000;
   --color-ivory: #fff1b8;
+
+  /* Public site palette, used by CMS previews. */
+  --color-cream: #faf7f0;
+  --color-oat: #f5f0e7;
+  --color-royal: #163765;
 
   --color-silver: #e5e7eb;
   --color-muted: #a3a3a3;
@@ -31,9 +68,9 @@
   body {
     margin: 0;
     min-height: 100svh;
-    background-color: var(--color-ink);
-    color: var(--color-silver);
-    font-family: var(--font-sans);
+    background-color: var(--color-oat);
+    color: var(--color-ink);
+    font-family: "Poppins", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -44,7 +81,7 @@
 
   ::selection {
     background: color-mix(in oklab, var(--color-gold) 35%, transparent);
-    color: white;
+    color: var(--color-ink);
   }
 }
 
@@ -56,6 +93,57 @@
 
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .font-lejour {
+    font-family: "LeJourScript", Georgia, serif;
+  }
+
+  .font-noto-serif {
+    font-family: "Noto Serif", Georgia, serif;
+  }
+
+  .font-poppins {
+    font-family: "Poppins", system-ui, sans-serif;
+  }
+
+  /* Admin chrome, matching the cream pages of the public site. */
+  .luxury-paper {
+    background-color: var(--color-oat);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, rgba(255, 255, 255, 0.55), transparent 60%),
+      radial-gradient(ellipse at 90% 100%, rgba(22, 55, 101, 0.04), transparent 55%);
+    color: var(--color-ink);
+  }
+
+  .paper-card {
+    border: 1px solid color-mix(in oklab, var(--color-royal) 14%, transparent);
+    background-color: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 10px 30px rgba(22, 55, 101, 0.05);
+  }
+
+  .btn-royal {
+    border: 2px solid var(--color-royal);
+    background-color: var(--color-royal);
+    color: var(--color-cream);
+    font-family: "Poppins", system-ui, sans-serif;
+    font-weight: 500;
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  .btn-royal:hover {
+    border-color: var(--color-gold-deep);
+    background-color: var(--color-gold-deep);
+    color: #fff;
+  }
+
+  .skeleton-paper {
+    background: linear-gradient(90deg, rgba(22, 55, 101, 0.06) 0%, rgba(22, 55, 101, 0.12) 45%, rgba(22, 55, 101, 0.06) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
   }
 
   .text-gold-gradient {
@@ -112,7 +200,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-shimmer {
+  .skeleton-shimmer,
+  .skeleton-paper {
     animation: none;
   }
 }

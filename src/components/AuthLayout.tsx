@@ -11,15 +11,15 @@ export default function AuthLayout({
     children: ReactNode
 }) {
     return (
-        <main className="flex min-h-svh items-center justify-center bg-ink px-4 py-12">
+        <main className="luxury-paper flex min-h-svh items-center justify-center px-4 py-12 font-poppins">
             <div className="w-full max-w-sm">
                 <div className="flex justify-center">
-                    <BrandWordmark />
+                    <BrandWordmark className="text-2xl" />
                 </div>
-                <div className="card-surface mt-5 rounded-xl border border-white/10 p-6 shadow-xl shadow-black/40">
-                    <h1 className="font-serif text-2xl text-gold-gradient">{title}</h1>
+                <div className="paper-card mt-6 rounded-[3px] p-6">
+                    <h1 className="font-noto-serif text-2xl text-ink">{title}</h1>
                     {description && (
-                        <p className="mt-1.5 text-sm leading-relaxed text-silver/70">{description}</p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-ink/60">{description}</p>
                     )}
                     <div className="mt-5">{children}</div>
                 </div>

@@ -78,10 +78,10 @@ export default function Login() {
                 </div>
 
                 {notice && !(formError || error) && (
-                    <p className="text-sm text-emerald-300">{notice}</p>
+                    <p className="text-sm text-emerald-700">{notice}</p>
                 )}
                 {(formError || error) && (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm text-red-700">
                         {formError || error}
                     </p>
                 )}
@@ -101,12 +101,12 @@ export default function Login() {
                 Continue with Google
             </button>
 
-            <p className="mt-4 text-center text-sm text-silver/70">
+            <p className="mt-4 text-center text-sm text-ink/60">
                 <Link to="/forgot-password" className={linkClass}>
                     Forgot password?
                 </Link>
             </p>
-            <p className="mt-2 text-center text-sm text-silver/70">
+            <p className="mt-2 text-center text-sm text-ink/60">
                 No account yet?{' '}
                 <Link to={`/signup?next=${encodeURIComponent(next)}`} className={linkClass}>
                     Create one

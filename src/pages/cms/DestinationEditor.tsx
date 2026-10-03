@@ -47,15 +47,15 @@ function EditorScreen({ slug }: { slug: string | undefined }) {
     if (isPending) return <EditorSkeleton />
     if (error || !tour) {
         return (
-            <div className="rounded-xl border border-white/10 px-6 py-16 text-center">
-                <p className="font-serif text-2xl text-white">Destination not found</p>
-                <p className="mx-auto mt-3 max-w-sm text-sm text-silver/70">
+            <div className="rounded-[3px] border border-royal/15 px-6 py-16 text-center">
+                <p className="font-noto-serif text-2xl text-ink">Destination not found</p>
+                <p className="mx-auto mt-3 max-w-sm text-sm text-ink/60">
                     {error?.message ?? 'It may have been renamed or deleted.'}
                 </p>
                 <Link
                     to=".."
                     relative="path"
-                    className="mt-6 inline-block text-sm text-gold transition hover:text-ivory"
+                    className="mt-6 inline-block text-sm font-medium text-royal transition hover:text-gold-deep"
                 >
                     Back to destinations
                 </Link>
@@ -67,7 +67,7 @@ function EditorScreen({ slug }: { slug: string | undefined }) {
 
 function EditorSkeleton() {
     return (
-        <div className="overflow-hidden rounded-2xl border border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink">
             <div className="h-[52svh] skeleton-shimmer" />
             <div className="grid gap-10 p-8 lg:grid-cols-[0.85fr_1.15fr]">
                 <div className="space-y-3">
@@ -196,13 +196,13 @@ function Editor({ tour }: { tour: Tour | null }) {
                 onDelete={isNew ? undefined : () => setConfirmDelete(true)}
             />
 
-            <div className="card-surface mb-5 grid gap-4 rounded-xl border border-white/10 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
+            <div className="paper-card mb-5 grid gap-4 rounded-[3px] p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end">
                 <div>
                     <label htmlFor="destination-slug" className={labelClass}>
                         URL slug
                     </label>
                     <div className="flex items-center gap-2">
-                        <span className="shrink-0 text-sm text-silver/50">/destinations/</span>
+                        <span className="shrink-0 text-sm text-ink/50">/destinations/</span>
                         <input
                             id="destination-slug"
                             value={draft.slug}
@@ -211,11 +211,11 @@ function Editor({ tour }: { tour: Tour | null }) {
                                 setSlugTouched(true)
                                 setField('slug', event.target.value.toLowerCase())
                             }}
-                            className={`${fieldClass} ${invalid('slug') ? 'border-red-400/70' : ''}`}
+                            className={`${fieldClass} ${invalid('slug') ? 'border-red-600/70' : ''}`}
                         />
                     </div>
                     {!isNew && draft.slug !== baseline.slug ? (
-                        <p className="mt-1.5 text-xs text-gold/80">
+                        <p className="mt-1.5 text-xs text-[#9b7512]">
                             Changing the slug breaks existing links to this destination.
                         </p>
                     ) : null}
@@ -240,7 +240,7 @@ function Editor({ tour }: { tour: Tour | null }) {
                         <ChevronDown
                             size={14}
                             strokeWidth={1.6}
-                            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gold/70"
+                            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-royal/70"
                             aria-hidden
                         />
                     </div>
@@ -249,16 +249,16 @@ function Editor({ tour }: { tour: Tour | null }) {
                     type="button"
                     aria-pressed={draft.featured}
                     onClick={() => setField('featured', !draft.featured)}
-                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                    className={`inline-flex items-center gap-2 rounded-[3px] border px-3 py-2 text-sm transition ${
                         draft.featured
-                            ? 'border-gold/50 bg-gold/10 text-gold'
-                            : 'border-white/15 text-silver/70 hover:border-gold/40 hover:text-gold'
+                            ? 'border-royal bg-royal text-cream'
+                            : 'border-royal/25 bg-white/60 text-ink/70 hover:border-royal hover:text-royal'
                     }`}
                 >
                     <Star
                         size={15}
                         strokeWidth={1.75}
-                        className={draft.featured ? 'fill-gold' : ''}
+                        className={draft.featured ? 'fill-gold-deep text-gold-deep' : ''}
                         aria-hidden
                     />
                     {draft.featured ? 'Featured on home page' : 'Not featured'}
@@ -268,14 +268,14 @@ function Editor({ tour }: { tour: Tour | null }) {
             {errors || saveError || notice ? (
                 <div className="mb-5 space-y-2">
                     {saveError ? (
-                        <p className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                        <p className="rounded-[3px] border border-red-700/25 bg-red-50 px-3 py-2 text-sm text-red-800">
                             {saveError}
                         </p>
                     ) : null}
                     {errors ? (
-                        <div className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                        <div className="rounded-[3px] border border-red-700/25 bg-red-50 px-3 py-2 text-sm text-red-800">
                             <p>Fix these before saving:</p>
-                            <ul className="mt-1 list-disc pl-5 text-red-300/90">
+                            <ul className="mt-1 list-disc pl-5 text-red-800/90">
                                 {errors.messages.map((message) => (
                                     <li key={message}>{message}</li>
                                 ))}
@@ -283,19 +283,19 @@ function Editor({ tour }: { tour: Tour | null }) {
                         </div>
                     ) : null}
                     {notice ? (
-                        <p className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+                        <p className="rounded-[3px] border border-emerald-700/25 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                             {notice}
                         </p>
                     ) : null}
                 </div>
             ) : null}
 
-            <p className="mb-3 flex items-center gap-2 text-xs text-silver/50">
+            <p className="mb-3 flex items-center gap-2 text-xs text-ink/55">
                 <Info size={13} strokeWidth={1.6} aria-hidden />
                 This is the live page layout. Click any text or image to edit it.
             </p>
 
-            <div className="@container overflow-hidden rounded-2xl border border-white/10 bg-ink">
+            <div className="@container overflow-hidden rounded-2xl border border-white/10 bg-ink font-sans text-silver">
                 <div className="relative h-[60svh] min-h-[24rem] overflow-hidden @4xl:h-[56svh]">
                     <EditableImage
                         className="absolute inset-0"
@@ -388,6 +388,7 @@ function Editor({ tour }: { tour: Tour | null }) {
 
                         <div className="min-w-0 max-w-full pt-8 @3xl:pt-10">
                             <SectionTabs
+                                tone="dark"
                                 label="Destination sections"
                                 tabs={TABS}
                                 value={tab}

@@ -141,7 +141,7 @@ function SortableCard({
                 onClickCapture={onClickCapture}
                 aria-roledescription={sortable ? 'sortable destination' : undefined}
                 aria-describedby={sortable ? attributes['aria-describedby'] : undefined}
-                className={`block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-gold/60 [&_img]:[-webkit-user-drag:none] ${
+                className={`block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-royal/60 [&_img]:[-webkit-user-drag:none] ${
                     sortable ? 'cursor-grab touch-manipulation' : ''
                 }`}
                 {...(sortable ? listeners : {})}

@@ -8,6 +8,7 @@ import DestinationTable from '../../components/cms/destinations/DestinationTable
 import LoadMoreSentinel from '../../components/cms/destinations/LoadMoreSentinel'
 import { defaultDir, useDestinationFilters } from '../../hooks/useDestinationFilters'
 import { useMoveTour, useTourSearch } from '../../hooks/useTours'
+import { primaryActionClass } from '../../lib/formStyles'
 import type { TourMove } from '../../services/tourService'
 import type { TourSort } from '../../types/tour'
 
@@ -55,7 +56,7 @@ export default function Destinations() {
                 actions={
                     <Link
                         to="new"
-                        className="btn-gold inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm"
+                        className={primaryActionClass}
                     >
                         <Plus size={15} strokeWidth={1.75} aria-hidden />
                         New destination
@@ -72,7 +73,7 @@ export default function Destinations() {
                 />
 
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <p className="text-silver/60" aria-live="polite">
+                    <p className="text-ink/60" aria-live="polite">
                         {isPending
                             ? 'Loading…'
                             : tours.length < total
@@ -82,14 +83,14 @@ export default function Destinations() {
                             <button
                                 type="button"
                                 onClick={clearFilters}
-                                className="ml-3 text-gold transition hover:text-ivory"
+                                className="ml-3 font-medium text-royal underline-offset-4 transition hover:text-gold-deep hover:underline"
                             >
                                 Clear filters
                             </button>
                         ) : null}
                     </p>
                     {view === 'cards' && total > 1 ? (
-                        <p className="flex items-center gap-1.5 text-silver/50">
+                        <p className="flex items-center gap-1.5 text-ink/50">
                             {sortable ? (
                                 <>
                                     <GripVertical size={13} strokeWidth={1.6} aria-hidden />
@@ -108,10 +109,10 @@ export default function Destinations() {
                 {notice ? (
                     <p
                         role="status"
-                        className={`rounded-lg border px-3 py-2 text-sm ${
+                        className={`rounded-[3px] border px-3 py-2 text-sm ${
                             notice.tone === 'ok'
-                                ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'
-                                : 'border-red-400/30 bg-red-500/10 text-red-300'
+                                ? 'border-emerald-700/25 bg-emerald-50 text-emerald-800'
+                                : 'border-red-700/25 bg-red-50 text-red-800'
                         }`}
                     >
                         {notice.text}
@@ -127,22 +128,22 @@ export default function Destinations() {
                         ))}
                     </div>
                 ) : isError ? (
-                    <div className="rounded-xl border border-red-400/20 px-6 py-12 text-center">
-                        <p className="text-sm text-red-300">{error.message}</p>
+                    <div className="rounded-[3px] border border-red-700/20 bg-red-50/60 px-6 py-12 text-center">
+                        <p className="text-sm text-red-800">{error.message}</p>
                         <button
                             type="button"
                             onClick={() => void refetch()}
-                            className="mt-4 text-sm text-gold transition hover:text-ivory"
+                            className="mt-4 text-sm font-medium text-royal transition hover:text-gold-deep"
                         >
                             Try again
                         </button>
                     </div>
                 ) : tours.length === 0 ? (
-                    <div className="rounded-xl border border-white/10 px-6 py-16 text-center">
-                        <p className="font-serif text-2xl text-white">
+                    <div className="rounded-[3px] border border-royal/15 px-6 py-16 text-center">
+                        <p className="font-noto-serif text-2xl text-ink">
                             {hasFilters ? 'No destinations matched' : 'No destinations yet'}
                         </p>
-                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-silver/70">
+                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
                             {hasFilters
                                 ? 'Try another search or clear the filters.'
                                 : 'Create the first signature journey to publish it on the site.'}
@@ -151,14 +152,14 @@ export default function Destinations() {
                             <button
                                 type="button"
                                 onClick={clearFilters}
-                                className="mt-6 text-sm text-gold transition hover:text-ivory"
+                                className="mt-6 text-sm font-medium text-royal transition hover:text-gold-deep"
                             >
                                 Clear filters
                             </button>
                         ) : (
                             <Link
                                 to="new"
-                                className="mt-6 inline-block text-sm text-gold transition hover:text-ivory"
+                                className="mt-6 inline-block text-sm font-medium text-royal transition hover:text-gold-deep"
                             >
                                 New destination
                             </Link>

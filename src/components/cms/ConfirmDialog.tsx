@@ -37,7 +37,7 @@ export default function ConfirmDialog({
         <AnimatePresence>
             {open ? (
                 <motion.div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-royal/30 p-4 font-poppins backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -53,19 +53,19 @@ export default function ConfirmDialog({
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.18 }}
                         onClick={(event) => event.stopPropagation()}
-                        className="card-surface w-full max-w-sm rounded-xl border border-white/10 p-5 shadow-2xl"
+                        className="w-full max-w-sm rounded-[3px] border border-royal/15 bg-cream p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
                     >
-                        <h2 id="confirm-dialog-title" className="font-serif text-lg text-white">
+                        <h2 id="confirm-dialog-title" className="font-noto-serif text-xl text-ink">
                             {title}
                         </h2>
-                        <p className="mt-2 text-sm leading-relaxed text-silver/70">{body}</p>
+                        <p className="mt-2 text-sm leading-relaxed text-ink/65">{body}</p>
                         <div className="mt-5 flex justify-end gap-2">
                             <button
                                 type="button"
                                 autoFocus
                                 disabled={busy}
                                 onClick={onCancel}
-                                className="rounded-lg border border-white/15 px-3.5 py-1.5 text-sm text-silver transition hover:border-gold/40 hover:text-gold disabled:opacity-60"
+                                className="rounded-[3px] border border-royal/25 px-3.5 py-1.5 text-sm text-ink/75 transition hover:border-royal hover:text-royal disabled:opacity-60"
                             >
                                 {cancelLabel}
                             </button>
@@ -75,8 +75,8 @@ export default function ConfirmDialog({
                                 onClick={onConfirm}
                                 className={
                                     tone === 'danger'
-                                        ? 'rounded-lg bg-red-500/90 px-3.5 py-1.5 text-sm text-white transition hover:bg-red-500 disabled:opacity-60'
-                                        : 'btn-gold rounded-lg px-3.5 py-1.5 text-sm disabled:opacity-60'
+                                        ? 'rounded-[3px] bg-red-700 px-3.5 py-1.5 text-sm text-white transition hover:bg-red-800 disabled:opacity-60'
+                                        : 'btn-royal rounded-[3px] px-3.5 py-1.5 text-sm disabled:opacity-60'
                                 }
                             >
                                 {confirmLabel}

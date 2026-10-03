@@ -1,6 +1,7 @@
 import { ChevronDown, LayoutGrid, Rows3, Search, Star, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import type { DestinationView } from '../../../hooks/useDestinationFilters'
+import { selectClass as controlClass } from '../../../lib/formStyles'
 import { REGION_OPTIONS, type TourSearchParams, type TourSort } from '../../../types/tour'
 
 const SORT_OPTIONS: { id: TourSort; label: string }[] = [
@@ -11,9 +12,6 @@ const SORT_OPTIONS: { id: TourSort; label: string }[] = [
     { id: 'featured', label: 'Featured first' },
     { id: 'updated', label: 'Recently updated' },
 ]
-
-const controlClass =
-    'h-9 rounded-lg border border-white/15 bg-ink-soft text-sm text-silver outline-none transition focus:border-gold/60'
 
 type DestinationFiltersProps = {
     filters: TourSearchParams
@@ -48,7 +46,7 @@ export default function DestinationFilters({
                 <Search
                     size={15}
                     strokeWidth={1.6}
-                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gold/70"
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gold-deep"
                     aria-hidden
                 />
                 <input
@@ -58,7 +56,7 @@ export default function DestinationFilters({
                     placeholder="Search by title, place, or slug…"
                     aria-label="Search destinations"
                     autoComplete="off"
-                    className={`${controlClass} w-full pr-9 pl-9 placeholder:text-muted [&::-webkit-search-cancel-button]:hidden`}
+                    className={`${controlClass} w-full pr-9 pl-9 placeholder:text-ink/40 [&::-webkit-search-cancel-button]:hidden`}
                 />
                 {query ? (
                     <button
@@ -68,7 +66,7 @@ export default function DestinationFilters({
                             setQuery('')
                             onChange({ q: '' })
                         }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted transition hover:text-gold"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-ink/45 transition hover:bg-royal/5 hover:text-royal"
                     >
                         <X size={14} strokeWidth={1.6} />
                     </button>
@@ -92,16 +90,16 @@ export default function DestinationFilters({
                 type="button"
                 aria-pressed={filters.featured}
                 onClick={() => onChange({ featured: !filters.featured })}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm transition ${
+                className={`inline-flex h-9 items-center gap-1.5 rounded-[3px] border px-3 text-sm transition ${
                     filters.featured
-                        ? 'border-gold/50 bg-gold/10 text-gold'
-                        : 'border-white/15 text-silver/70 hover:border-gold/40 hover:text-gold'
+                        ? 'border-royal bg-royal text-cream'
+                        : 'border-royal/25 bg-white/60 text-ink/70 hover:border-royal hover:text-royal'
                 }`}
             >
                 <Star
                     size={14}
                     strokeWidth={1.75}
-                    className={filters.featured ? 'fill-gold' : ''}
+                    className={filters.featured ? 'fill-gold-deep text-gold-deep' : ''}
                     aria-hidden
                 />
                 Featured only
@@ -122,7 +120,7 @@ export default function DestinationFilters({
             <div
                 role="group"
                 aria-label="View"
-                className="inline-flex h-9 items-center rounded-lg border border-white/15 p-0.5"
+                className="inline-flex h-9 items-center rounded-[3px] border border-royal/25 bg-white/60 p-0.5"
             >
                 <ViewButton
                     label="Card view"
@@ -167,7 +165,7 @@ function SelectControl({
             <ChevronDown
                 size={14}
                 strokeWidth={1.6}
-                className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gold/70"
+                className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-royal/70"
                 aria-hidden
             />
         </div>
@@ -192,8 +190,8 @@ function ViewButton({
             title={label}
             aria-pressed={active}
             onClick={onClick}
-            className={`flex h-full w-8 items-center justify-center rounded-md transition ${
-                active ? 'bg-white/10 text-gold' : 'text-silver/60 hover:text-gold'
+            className={`flex h-full w-8 items-center justify-center rounded-[2px] transition ${
+                active ? 'bg-royal text-cream' : 'text-ink/55 hover:text-royal'
             }`}
         >
             {children}

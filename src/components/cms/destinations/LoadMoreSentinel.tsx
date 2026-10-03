@@ -40,7 +40,7 @@ export default function LoadMoreSentinel({
                 type="button"
                 onClick={onLoadMore}
                 disabled={isFetchingNextPage}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm text-silver/80 transition hover:border-gold/40 hover:text-gold disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-[3px] border-2 border-royal/70 px-5 py-2 text-sm text-royal transition hover:border-gold-deep hover:bg-gold-deep hover:text-white disabled:opacity-60"
             >
                 {isFetchingNextPage ? <Loader2 size={14} className="animate-spin" aria-hidden /> : null}
                 {isFetchingNextPage ? 'Loading…' : 'Load more'}

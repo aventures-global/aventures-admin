@@ -5,7 +5,7 @@ import { safeNext } from '../lib/safeNext'
 
 function LoadingScreen() {
     return (
-        <main className="flex min-h-svh items-center justify-center bg-ink text-sm text-silver/60">
+        <main className="flex min-h-svh items-center justify-center luxury-paper font-poppins text-sm text-ink/60">
             Loading…
         </main>
     )

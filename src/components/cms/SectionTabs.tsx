@@ -11,14 +11,39 @@ type SectionTabsProps<T extends Tab> = {
     value: T['id']
     onChange: (id: T['id']) => void
     label: string
+    /** `dark` mirrors the public destination page tabs inside the editor canvas. */
+    tone?: 'light' | 'dark'
 }
+
+const TONES = {
+    light: {
+        rail: 'border-royal/15',
+        active: 'text-ink',
+        idle: 'text-ink/50 hover:text-royal',
+        bar: 'bg-royal',
+        fadeLeft: 'from-oat',
+        fadeRight: 'from-oat',
+        arrow: 'bg-cream/90 text-royal shadow-[0_0_12px_rgba(22,55,101,0.15)]',
+    },
+    dark: {
+        rail: 'border-white/10',
+        active: 'text-white',
+        idle: 'text-silver/55 hover:text-silver',
+        bar: 'bg-gold',
+        fadeLeft: 'from-ink',
+        fadeRight: 'from-ink',
+        arrow: 'bg-ink/80 text-gold shadow-[0_0_12px_rgba(0,0,0,0.45)]',
+    },
+} as const
 
 export default function SectionTabs<T extends Tab>({
     tabs,
     value,
     onChange,
     label,
+    tone = 'light',
 }: SectionTabsProps<T>) {
+    const styles = TONES[tone]
     const scrollerRef = useRef<HTMLDivElement>(null)
     const [canLeft, setCanLeft] = useState(false)
     const [canRight, setCanRight] = useState(false)
@@ -73,7 +98,7 @@ export default function SectionTabs<T extends Tab>({
         <div className="relative min-w-0 max-w-full">
             <div
                 ref={scrollerRef}
-                className="no-scrollbar min-w-0 overflow-x-auto overscroll-x-contain border-b border-white/10 [touch-action:pan-x]"
+                className={`no-scrollbar min-w-0 overflow-x-auto overscroll-x-contain border-b ${styles.rail} [touch-action:pan-x]`}
             >
                 <nav
                     aria-label={label}
@@ -89,14 +114,14 @@ export default function SectionTabs<T extends Tab>({
                                 aria-selected={active}
                                 onClick={() => onChange(item.id)}
                                 className={`relative snap-start shrink-0 pb-3.5 text-sm tracking-wide whitespace-nowrap transition-colors ${
-                                    active ? 'text-white' : 'text-silver/55 hover:text-silver'
+                                    active ? styles.active : styles.idle
                                 }`}
                             >
                                 {item.label}
                                 <span
                                     aria-hidden
                                     className={`absolute inset-x-0 bottom-0 h-0.5 rounded-full ${
-                                        active ? 'bg-gold' : 'bg-transparent'
+                                        active ? styles.bar : 'bg-transparent'
                                     }`}
                                 />
                             </button>
@@ -107,13 +132,13 @@ export default function SectionTabs<T extends Tab>({
 
             <div
                 aria-hidden
-                className={`pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-ink to-transparent transition-opacity ${
+                className={`pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r ${styles.fadeLeft} to-transparent transition-opacity ${
                     canLeft ? 'opacity-100' : 'opacity-0'
                 }`}
             />
             <div
                 aria-hidden
-                className={`pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-ink to-transparent transition-opacity ${
+                className={`pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l ${styles.fadeRight} to-transparent transition-opacity ${
                     canRight ? 'opacity-100' : 'opacity-0'
                 }`}
             />
@@ -123,7 +148,7 @@ export default function SectionTabs<T extends Tab>({
                     type="button"
                     aria-label="Scroll tabs left"
                     onClick={() => scrollByDir(-1)}
-                    className="absolute top-1/2 left-0 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-ink/80 text-gold shadow-[0_0_12px_rgba(0,0,0,0.45)]"
+                    className={`absolute top-1/2 left-0 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full ${styles.arrow}`}
                 >
                     <ChevronLeft size={16} strokeWidth={1.75} />
                 </button>
@@ -134,7 +159,7 @@ export default function SectionTabs<T extends Tab>({
                     type="button"
                     aria-label="Scroll tabs right"
                     onClick={() => scrollByDir(1)}
-                    className="absolute top-1/2 right-0 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-ink/80 text-gold shadow-[0_0_12px_rgba(0,0,0,0.45)]"
+                    className={`absolute top-1/2 right-0 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full ${styles.arrow}`}
                 >
                     <ChevronRight size={16} strokeWidth={1.75} />
                 </button>

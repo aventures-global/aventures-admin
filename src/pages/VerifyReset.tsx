@@ -61,7 +61,7 @@ export default function VerifyReset() {
                     />
                 </div>
                 {error && (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm text-red-700">
                         {error}
                     </p>
                 )}
@@ -70,7 +70,7 @@ export default function VerifyReset() {
                 </button>
             </form>
 
-            <p className="mt-4 text-center text-sm text-silver/70">
+            <p className="mt-4 text-center text-sm text-ink/60">
                 <Link to="/forgot-password" className={linkClass}>
                     Request a new code
                 </Link>

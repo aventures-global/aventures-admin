@@ -7,8 +7,8 @@ import { useAuth } from '../../lib/authContext'
 import BrandWordmark from '../BrandWordmark'
 
 function navLinkClass(active: boolean) {
-    return `flex min-h-8 items-center gap-2.5 rounded-md px-2.5 font-serif text-sm tracking-wide transition-colors ${
-        active ? 'bg-white/5 text-gold' : 'text-silver/75 hover:bg-white/[0.03] hover:text-gold'
+    return `flex min-h-9 items-center gap-2.5 rounded-[3px] px-2.5 font-noto-serif text-[15px] tracking-wide transition-colors ${
+        active ? 'bg-royal/[0.06] text-gold-deep' : 'text-ink/75 hover:bg-royal/[0.04] hover:text-[#9b7512]'
     }`
 }
 
@@ -58,7 +58,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                         aria-expanded={cmsOpen}
                         aria-controls={cmsMenuId}
                         onClick={() => setCmsOpen((value) => !value)}
-                        className={`${navLinkClass(false)} w-full ${inCms ? 'text-gold' : ''}`}
+                        className={`${navLinkClass(false)} w-full ${inCms ? 'text-gold-deep' : ''}`}
                     >
                         <Layers size={15} strokeWidth={1.5} aria-hidden />
                         <span className="flex-1 text-left">CMS</span>
@@ -78,7 +78,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="ml-4 overflow-hidden border-l border-white/10 pl-1.5"
+                                className="ml-4 overflow-hidden border-l border-royal/15 pl-1.5"
                             >
                                 {cmsItems.map((item) => {
                                     const Icon = item.icon
@@ -87,7 +87,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                                             <NavLink
                                                 to={cmsPath(item)}
                                                 className={({ isActive }) =>
-                                                    `${navLinkClass(isActive)} text-[13px]`
+                                                    `${navLinkClass(isActive)} text-sm`
                                                 }
                                                 onClick={onNavigate}
                                             >
@@ -103,7 +103,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </div>
             </nav>
 
-            <div className="border-t border-white/10 p-2">
+            <div className="border-t border-royal/10 p-2">
                 <ProfileMenu />
             </div>
         </div>
@@ -156,12 +156,12 @@ function ProfileMenu() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.16 }}
-                        className="absolute inset-x-0 bottom-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-xl border border-white/12 bg-ink-soft shadow-xl shadow-black/40"
+                        className="absolute inset-x-0 bottom-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-[3px] border border-royal/15 bg-cream shadow-[0_18px_40px_rgba(22,55,101,0.14)]"
                     >
-                        <div className="border-b border-white/10 px-3 py-2.5">
-                            <p className="truncate text-sm font-medium text-white">{displayName}</p>
+                        <div className="border-b border-royal/10 px-3 py-2.5">
+                            <p className="truncate text-sm font-medium text-ink">{displayName}</p>
                             {appUser?.email ? (
-                                <p className="mt-0.5 truncate text-xs text-silver/55">{appUser.email}</p>
+                                <p className="mt-0.5 truncate text-xs text-ink/55">{appUser.email}</p>
                             ) : null}
                         </div>
                         <button
@@ -171,7 +171,7 @@ function ProfileMenu() {
                             onClick={() => {
                                 void handleLogout()
                             }}
-                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-silver/85 transition hover:bg-white/5 hover:text-gold disabled:opacity-60"
+                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-ink/80 transition hover:bg-royal/5 hover:text-royal disabled:opacity-60"
                         >
                             <LogOut size={15} strokeWidth={1.5} aria-hidden />
                             {signingOut ? 'Signing out…' : 'Log out'}
@@ -186,20 +186,20 @@ function ProfileMenu() {
                 aria-expanded={open}
                 aria-controls={menuId}
                 onClick={() => setOpen((value) => !value)}
-                className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition hover:bg-white/5 ${
-                    open ? 'bg-white/5' : ''
+                className={`flex w-full items-center gap-2.5 rounded-[3px] px-2 py-1.5 text-left transition hover:bg-royal/5 ${
+                    open ? 'bg-royal/5' : ''
                 }`}
             >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gold/45 bg-ink-card text-[10px] font-semibold tracking-wide text-gold">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal font-noto-serif text-[11px] tracking-wide text-cream">
                     {initialsFromName(displayName)}
                 </span>
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-medium text-white">{displayName}</span>
+                    <span className="block truncate text-xs font-medium text-ink">{displayName}</span>
                     {appUser ? (
-                        <span className="block truncate text-[11px] text-silver/55">{appUser.role}</span>
+                        <span className="block truncate text-[11px] text-ink/55">{appUser.role}</span>
                     ) : null}
                 </span>
-                <ChevronsUpDown size={14} strokeWidth={1.5} aria-hidden className="text-silver/50" />
+                <ChevronsUpDown size={14} strokeWidth={1.5} aria-hidden className="text-ink/45" />
             </button>
         </div>
     )

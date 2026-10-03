@@ -35,8 +35,8 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                 <button
                     type="button"
                     onClick={() => onSort(key)}
-                    className={`inline-flex items-center gap-1.5 transition hover:text-gold ${
-                        active ? 'text-gold' : ''
+                    className={`inline-flex items-center gap-1.5 transition hover:text-royal ${
+                        active ? 'text-royal' : ''
                     }`}
                 >
                     {label}
@@ -47,9 +47,9 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
     }
 
     return (
-        <div className="overflow-x-auto rounded-xl border border-white/10">
+        <div className="paper-card overflow-x-auto rounded-[3px]">
             <table className="w-full min-w-[56rem] text-left text-sm">
-                <thead className="border-b border-white/10 bg-ink-soft text-[11px] uppercase tracking-[0.14em] text-silver/60">
+                <thead className="border-b border-royal/15 bg-cream text-[11px] uppercase tracking-[0.14em] text-ink/55">
                     <tr>
                         {header('', undefined, 'w-20')}
                         {header('Title', 'name')}
@@ -61,7 +61,7 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                         {header('Updated', 'updated')}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-royal/10">
                     {tours.map((tour) => (
                         <tr
                             key={tour.id}
@@ -70,47 +70,47 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                             onKeyDown={(event) => {
                                 if (event.key === 'Enter') navigate(tour.slug)
                             }}
-                            className="cursor-pointer transition-colors hover:bg-white/[0.03] focus-visible:bg-white/[0.05] focus-visible:outline-none"
+                            className="cursor-pointer transition-colors hover:bg-royal/[0.03] focus-visible:bg-royal/[0.05] focus-visible:outline-none"
                         >
                             <td className="px-3 py-2">
                                 <SafeImage
                                     src={tour.coverImage}
                                     alt=""
-                                    className="h-10 w-14 rounded-md"
+                                    className="h-10 w-14 rounded-[3px]"
                                     imgClassName={`object-cover ${cardCoverFocus(tour.id)}`}
                                 />
                             </td>
                             <td className="px-3 py-2">
-                                <p className="font-serif text-base text-white">{tour.title}</p>
-                                <p className="text-xs text-silver/50">/{tour.slug}</p>
+                                <p className="font-noto-serif text-base text-ink">{tour.title}</p>
+                                <p className="text-xs text-ink/45">/{tour.slug}</p>
                             </td>
-                            <td className="px-3 py-2 text-silver/85">{tour.location}</td>
+                            <td className="px-3 py-2 text-ink/80">{tour.location}</td>
                             <td className="px-3 py-2">
                                 <span
                                     className={
-                                        tour.region === 'other' ? 'text-silver/50 italic' : 'text-silver/85'
+                                        tour.region === 'other' ? 'text-ink/45 italic' : 'text-ink/80'
                                     }
                                 >
                                     {regionLabel(tour.region)}
                                 </span>
                             </td>
-                            <td className="px-3 py-2 text-silver/75">{tour.duration}</td>
-                            <td className="px-3 py-2 text-silver/75">{tour.startingPrice}</td>
+                            <td className="px-3 py-2 text-ink/70">{tour.duration}</td>
+                            <td className="px-3 py-2 text-ink/70">{tour.startingPrice}</td>
                             <td className="px-3 py-2 text-center">
                                 {tour.featured ? (
                                     <Star
                                         size={15}
                                         strokeWidth={1.75}
-                                        className="inline fill-gold text-gold"
+                                        className="inline fill-gold-deep text-gold-deep"
                                         aria-label="Featured"
                                     />
                                 ) : (
-                                    <span className="text-silver/25" aria-label="Not featured">
+                                    <span className="text-ink/25" aria-label="Not featured">
                                         —
                                     </span>
                                 )}
                             </td>
-                            <td className="px-3 py-2 whitespace-nowrap text-silver/60">
+                            <td className="px-3 py-2 whitespace-nowrap text-ink/55">
                                 {dateFormat.format(new Date(tour.updatedAt))}
                             </td>
                         </tr>

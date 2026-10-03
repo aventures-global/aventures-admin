@@ -84,7 +84,7 @@ export default function ResetPassword() {
                     />
                 </div>
                 {error && (
-                    <p role="alert" className="text-sm text-red-300">
+                    <p role="alert" className="text-sm text-red-700">
                         {error}
                     </p>
                 )}
@@ -93,7 +93,7 @@ export default function ResetPassword() {
                 </button>
             </form>
 
-            <p className="mt-4 text-center text-sm text-silver/70">
+            <p className="mt-4 text-center text-sm text-ink/60">
                 <Link to="/login" className={linkClass}>
                     Back to log in
                 </Link>
