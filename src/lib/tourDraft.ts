@@ -1,10 +1,5 @@
 import type { Tour, TourInput } from '../types/tour'
-import {
-    DEFAULT_EXPERIENCE_BODY,
-    DEFAULT_TRAVEL_TIPS,
-    EXPERIENCE_CATEGORIES,
-    STORY_COUNT,
-} from './destinationContent'
+import { DEFAULT_TRAVEL_TIPS, EMPTY_EXPERIENCE, LEGACY_EXPERIENCE_EYEBROWS, STORY_COUNT } from './destinationContent'
 
 export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
@@ -15,12 +10,7 @@ export const EMPTY_TOUR: TourInput = {
     shortDescription: '',
     coverImage: '',
     location: '',
-    experiences: EXPERIENCE_CATEGORIES.map((category) => ({
-        headline: '',
-        summary: category.summary,
-        body: DEFAULT_EXPERIENCE_BODY,
-        image: '',
-    })),
+    experiences: [{ ...EMPTY_EXPERIENCE }],
     storyTitles: Array.from({ length: STORY_COUNT }, () => ''),
     travelTips: [...DEFAULT_TRAVEL_TIPS],
     featured: false,
@@ -32,7 +22,13 @@ export function toDraft(tour: Tour): TourInput {
     const { id, sortOrder, updatedAt, ...input } = tour
     return {
         ...input,
-        experiences: EMPTY_TOUR.experiences.map((empty, index) => ({ ...empty, ...input.experiences[index] })),
+        experiences: input.experiences.length
+            ? input.experiences.map((experience, index) => ({
+                  ...EMPTY_EXPERIENCE,
+                  ...experience,
+                  eyebrow: experience.eyebrow || (LEGACY_EXPERIENCE_EYEBROWS[index] ?? ''),
+              }))
+            : [{ ...EMPTY_EXPERIENCE }],
         storyTitles: EMPTY_TOUR.storyTitles.map((empty, index) => input.storyTitles[index] ?? empty),
         travelTips: EMPTY_TOUR.travelTips.map((empty, index) => input.travelTips[index] ?? empty),
     }
@@ -57,6 +53,7 @@ export function cleanDraft(draft: TourInput): TourInput {
         coverImage: draft.coverImage.trim(),
         location: draft.location.trim(),
         experiences: draft.experiences.map((experience) => ({
+            eyebrow: experience.eyebrow.trim(),
             headline: experience.headline.trim(),
             summary: experience.summary.trim(),
             body: experience.body.trim(),
@@ -76,6 +73,14 @@ const REQUIRED: { field: DraftField; label: string }[] = [
     { field: 'location', label: 'Location' },
     { field: 'shortDescription', label: 'SEO description' },
 ]
+
+const EXPERIENCE_FIELDS = [
+    { key: 'image', label: 'image' },
+    { key: 'eyebrow', label: 'eyebrow' },
+    { key: 'headline', label: 'title' },
+    { key: 'summary', label: 'subtitle' },
+    { key: 'body', label: 'description' },
+] as const
 
 export type DraftErrors = {
     fields: Partial<Record<DraftField, string>>
@@ -102,15 +107,16 @@ export function validateDraft(draft: TourInput): DraftErrors {
 
     const messages = Object.values(fields)
 
+    if (draft.experiences.length === 0) {
+        fields.experiences = 'Add at least one section'
+        messages.push(fields.experiences)
+    }
     draft.experiences.forEach((experience, index) => {
-        const label = EXPERIENCE_CATEGORIES[index]?.label ?? `Section ${index + 1}`
-        const missing = (['image', 'headline', 'summary', 'body'] as const).filter(
-            (key) => !experience[key].trim(),
-        )
-        for (const key of missing) items.add(`${key}-${index}`)
+        const missing = EXPERIENCE_FIELDS.filter(({ key }) => !experience[key].trim())
+        for (const { key } of missing) items.add(`${key}-${index}`)
         if (missing.length > 0) {
-            fields.experiences = 'Experience sections are incomplete'
-            messages.push(`${label} needs ${missing.join(', ')}`)
+            fields.experiences = 'Image and text sections are incomplete'
+            messages.push(`Section ${index + 1} needs ${missing.map(({ label }) => label).join(', ')}`)
         }
     })
 

@@ -17,14 +17,16 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom'
+import AddItemButton from '../../components/cms/AddItemButton'
 import ConfirmDialog from '../../components/cms/ConfirmDialog'
 import EditableImage from '../../components/cms/EditableImage'
 import EditableText from '../../components/cms/EditableText'
 import EditorToolbar from '../../components/cms/EditorToolbar'
+import ItemControls from '../../components/cms/ItemControls'
 import SafeImage from '../../components/ui/SafeImage'
 import { useCreateTour, useDeleteTour, useTour, useTours, useUpdateTour } from '../../hooks/useTours'
 import { cardCoverFocus, heroCoverFocus } from '../../lib/coverFocus'
-import { EXPERIENCE_CATEGORIES } from '../../lib/destinationContent'
+import { EMPTY_EXPERIENCE } from '../../lib/destinationContent'
 import { fieldClass, labelClass } from '../../lib/formStyles'
 import {
     EMPTY_TOUR,
@@ -162,6 +164,24 @@ function Editor({ tour }: { tour: Tour | null }) {
         setField(
             'experiences',
             draft.experiences.map((experience, i) => (i === index ? { ...experience, [key]: value } : experience)),
+        )
+    }
+
+    const addExperience = () => setField('experiences', [...draft.experiences, { ...EMPTY_EXPERIENCE }])
+
+    const moveExperience = (from: number, to: number) => {
+        if (to < 0 || to >= draft.experiences.length) return
+        const next = [...draft.experiences]
+        const [moved] = next.splice(from, 1)
+        next.splice(to, 0, moved)
+        setField('experiences', next)
+    }
+
+    const removeExperience = (index: number) => {
+        if (draft.experiences.length <= 1) return
+        setField(
+            'experiences',
+            draft.experiences.filter((_, i) => i !== index),
         )
     }
 
@@ -404,11 +424,12 @@ function Editor({ tour }: { tour: Tour | null }) {
                     </div>
                 </section>
 
-                {EXPERIENCE_CATEGORIES.map((category, index) => {
-                    const experience = draft.experiences[index]
+                {draft.experiences.map((experience, index) => {
                     const reverse = index % 2 === 1
+                    const sectionLabel = `section ${index + 1}`
+                    const eyebrow = experience.eyebrow.trim() || 'this section'
                     return (
-                        <section key={category.label} className={`py-16 @2xl:py-24 ${reverse ? 'bg-white/45' : ''}`}>
+                        <section key={index} className={`py-16 @2xl:py-24 ${reverse ? 'bg-white/45' : ''}`}>
                             {index === 0 ? (
                                 <div className={`${container} relative mb-6 @2xl:mb-20`}>
                                     <FixedBadge />
@@ -424,27 +445,49 @@ function Editor({ tour }: { tour: Tour | null }) {
                                     </p>
                                 </div>
                             ) : null}
+                            <div className={`${container} mb-5 flex items-center justify-between gap-3`}>
+                                <span className="text-[10px] uppercase tracking-[0.2em] text-ink/40">
+                                    Section {index + 1} of {draft.experiences.length}
+                                </span>
+                                <ItemControls
+                                    tone="light"
+                                    index={index}
+                                    count={draft.experiences.length}
+                                    label={sectionLabel}
+                                    canRemove={draft.experiences.length > 1}
+                                    onMove={moveExperience}
+                                    onRemove={removeExperience}
+                                />
+                            </div>
                             <article className={`${container} grid items-center gap-9 @4xl:grid-cols-2 @4xl:gap-16`}>
                                 <EditableImage
                                     className={`relative aspect-[4/3] overflow-hidden rounded-xl shadow-[0_20px_55px_rgba(22,55,101,0.12)] ${
                                         reverse ? '@4xl:order-2' : ''
                                     }`}
                                     src={experience.image}
-                                    alt={`${category.label} in ${location}`}
-                                    label={`${category.label} image`}
+                                    alt={`${eyebrow} in ${location}`}
+                                    label={`Section ${index + 1} image`}
                                     imgClassName="object-cover"
                                     invalid={invalidItem(`image-${index}`)}
                                     onChange={(url) => setExperience(index, 'image', url)}
                                 />
                                 <div className={reverse ? '@4xl:order-1' : ''}>
-                                    <p className="text-xs uppercase tracking-[0.28em] text-[#9b7512]">{category.label}</p>
+                                    <EditableText
+                                        className="text-xs uppercase tracking-[0.28em] text-[#9b7512]"
+                                        editClassName={lightEdit}
+                                        value={experience.eyebrow}
+                                        label={`Section ${index + 1} eyebrow`}
+                                        placeholder="Eyebrow, e.g. See"
+                                        invalid={invalidItem(`eyebrow-${index}`)}
+                                        onChange={(value) => setExperience(index, 'eyebrow', value)}
+                                    />
                                     <EditableText
                                         as="h3"
                                         className="mt-3 font-noto-serif text-2xl leading-tight text-royal @2xl:text-4xl"
                                         editClassName={lightEdit}
                                         value={experience.headline}
-                                        label={`${category.label} headline`}
-                                        placeholder={`What to ${category.label.toLowerCase()} in ${location}`}
+                                        label={`Section ${index + 1} title`}
+                                        placeholder={`Title, e.g. Highlights of ${location}`}
                                         invalid={invalidItem(`headline-${index}`)}
                                         onChange={(value) => setExperience(index, 'headline', value)}
                                     />
@@ -453,8 +496,8 @@ function Editor({ tour }: { tour: Tour | null }) {
                                         className="mt-1 max-w-xl text-base leading-8 text-ink/65"
                                         editClassName={lightEdit}
                                         value={experience.summary}
-                                        label={`${category.label} summary`}
-                                        placeholder="One line on what this section covers"
+                                        label={`Section ${index + 1} subtitle`}
+                                        placeholder="Subtitle: one line on what this section covers"
                                         invalid={invalidItem(`summary-${index}`)}
                                         onChange={(value) => setExperience(index, 'summary', value)}
                                     />
@@ -463,8 +506,8 @@ function Editor({ tour }: { tour: Tour | null }) {
                                         className="mt-4 max-w-xl text-sm leading-7 text-ink/50"
                                         editClassName={lightEdit}
                                         value={experience.body}
-                                        label={`${category.label} story`}
-                                        placeholder="A short story, local tip, or cultural detail"
+                                        label={`Section ${index + 1} description`}
+                                        placeholder="Description: a short story, local tip, or cultural detail"
                                         invalid={invalidItem(`body-${index}`)}
                                         onChange={(value) => setExperience(index, 'body', value)}
                                     />
@@ -474,6 +517,10 @@ function Editor({ tour }: { tour: Tour | null }) {
                         </section>
                     )
                 })}
+
+                <div className={`${container} flex justify-center pb-6`}>
+                    <AddItemButton tone="light" label="Add image and text section" onClick={addExperience} />
+                </div>
 
                 <StoriesSection
                     titles={draft.storyTitles}

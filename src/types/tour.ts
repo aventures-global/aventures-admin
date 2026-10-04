@@ -1,4 +1,5 @@
 export type TourExperience = {
+    eyebrow: string
     headline: string
     summary: string
     body: string
@@ -34,7 +35,6 @@ export type Tour = {
     shortDescription: string
     coverImage: string
     location: string
-    /** One per category in EXPERIENCE_CATEGORIES, in the same order. */
     experiences: TourExperience[]
     storyTitles: string[]
     travelTips: string[]
