@@ -1,7 +1,8 @@
-export type TourItineraryDay = {
-    day: number
-    title: string
-    description: string
+export type TourExperience = {
+    headline: string
+    summary: string
+    body: string
+    image: string
 }
 
 export type TourRegion =
@@ -32,14 +33,11 @@ export type Tour = {
     tagline: string
     shortDescription: string
     coverImage: string
-    gallery: string[]
-    duration: string
-    startingPrice: string
     location: string
-    highlights: string[]
-    itinerary: TourItineraryDay[]
-    inclusions: string[]
-    exclusions: string[]
+    /** One per category in EXPERIENCE_CATEGORIES, in the same order. */
+    experiences: TourExperience[]
+    storyTitles: string[]
+    travelTips: string[]
     featured: boolean
     region: TourRegion
     sortOrder: number

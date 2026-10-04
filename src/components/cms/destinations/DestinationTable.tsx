@@ -55,8 +55,7 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                         {header('Title', 'name')}
                         {header('Location', 'location')}
                         {header('Region', 'region')}
-                        {header('Duration')}
-                        {header('Price')}
+                        {header('Tagline')}
                         {header('Featured', 'featured', 'text-center')}
                         {header('Updated', 'updated')}
                     </tr>
@@ -94,8 +93,7 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                                     {regionLabel(tour.region)}
                                 </span>
                             </td>
-                            <td className="px-3 py-2 text-ink/70">{tour.duration}</td>
-                            <td className="px-3 py-2 text-ink/70">{tour.startingPrice}</td>
+                            <td className="max-w-64 truncate px-3 py-2 text-ink/70">{tour.tagline}</td>
                             <td className="px-3 py-2 text-center">
                                 {tour.featured ? (
                                     <Star

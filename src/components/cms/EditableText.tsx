@@ -10,6 +10,8 @@ type EditableTextProps = {
     /** Typography classes shared by the display element and the input. */
     className?: string
     as?: ElementType
+    /** Background of the input while editing; switch to a light tint on cream previews. */
+    editClassName?: string
     invalid?: boolean
     /** Start in edit mode, e.g. for a freshly added list item. */
     autoEdit?: boolean
@@ -27,6 +29,7 @@ export default function EditableText({
     multiline = false,
     className = '',
     as: Tag = 'p',
+    editClassName = 'bg-black/30',
     invalid = false,
     autoEdit = false,
     onEditEnd,
@@ -58,7 +61,7 @@ export default function EditableText({
     const ring = invalid ? 'outline-red-400/80' : 'outline-transparent'
 
     if (editing) {
-        const inputClass = `${className} block w-full min-w-0 resize-none border-0 bg-black/30 p-0 rounded-md outline-1 outline-offset-4 outline-gold placeholder:text-current placeholder:opacity-40 [field-sizing:content]`
+        const inputClass = `${className} block w-full min-w-0 resize-none border-0 ${editClassName} p-0 rounded-md outline-1 outline-offset-4 outline-gold placeholder:text-current placeholder:opacity-40 [field-sizing:content]`
         return multiline ? (
             <textarea
                 autoFocus

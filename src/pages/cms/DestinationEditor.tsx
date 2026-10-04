@@ -1,17 +1,30 @@
-import { ArrowLeft, ChevronDown, Clock3, Info, Lock, MapPin, Sparkles, Star } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import {
+    ArrowLeft,
+    ArrowRight,
+    CalendarClock,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Compass,
+    Files,
+    Info,
+    Lock,
+    Luggage,
+    MapPin,
+    Quote,
+    Star,
+} from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom'
 import ConfirmDialog from '../../components/cms/ConfirmDialog'
 import EditableImage from '../../components/cms/EditableImage'
-import EditableList from '../../components/cms/EditableList'
 import EditableText from '../../components/cms/EditableText'
 import EditorToolbar from '../../components/cms/EditorToolbar'
-import GalleryEditor from '../../components/cms/GalleryEditor'
-import ItineraryEditor from '../../components/cms/ItineraryEditor'
-import SectionTabs from '../../components/cms/SectionTabs'
-import { useCreateTour, useDeleteTour, useTour, useUpdateTour } from '../../hooks/useTours'
-import { heroCoverFocus } from '../../lib/coverFocus'
+import SafeImage from '../../components/ui/SafeImage'
+import { useCreateTour, useDeleteTour, useTour, useTours, useUpdateTour } from '../../hooks/useTours'
+import { cardCoverFocus, heroCoverFocus } from '../../lib/coverFocus'
+import { EXPERIENCE_CATEGORIES } from '../../lib/destinationContent'
 import { fieldClass, labelClass } from '../../lib/formStyles'
 import {
     EMPTY_TOUR,
@@ -21,19 +34,21 @@ import {
     validateDraft,
     type DraftErrors,
 } from '../../lib/tourDraft'
-import { REGION_OPTIONS, type Tour, type TourInput, type TourRegion } from '../../types/tour'
-
-const TABS = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'trips', label: 'Organized Trips' },
-    { id: 'flights', label: 'Flights' },
-    { id: 'hotels', label: 'Hotels' },
-    { id: 'cars', label: 'Cars' },
-] as const
-
-type TabId = (typeof TABS)[number]['id']
+import { listTestimonials, type Testimonial } from '../../services/testimonialService'
+import {
+    REGION_OPTIONS,
+    type Tour,
+    type TourExperience,
+    type TourInput,
+    type TourRegion,
+} from '../../types/tour'
 
 type SetField = <K extends keyof TourInput>(field: K, value: TourInput[K]) => void
+
+const container = 'mx-auto w-full max-w-[84rem] px-6 @2xl:px-8 @5xl:px-12'
+const lightEdit = 'bg-white/80'
+const darkEdit = 'bg-black/30'
+const TIP_ICONS = [CalendarClock, Luggage, Files, Compass]
 
 export default function DestinationEditor() {
     const { slug } = useParams<{ slug: string }>()
@@ -67,17 +82,15 @@ function EditorScreen({ slug }: { slug: string | undefined }) {
 
 function EditorSkeleton() {
     return (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink">
-            <div className="h-[52svh] skeleton-shimmer" />
-            <div className="grid gap-10 p-8 lg:grid-cols-[0.85fr_1.15fr]">
-                <div className="space-y-3">
-                    <div className="h-4 w-40 skeleton-shimmer rounded" />
-                    <div className="h-4 w-32 skeleton-shimmer rounded" />
-                </div>
+        <div className="overflow-hidden rounded-2xl border border-royal/10">
+            <div className="h-[34rem] skeleton-paper" />
+            <div className="grid gap-10 p-8 lg:grid-cols-2">
+                <div className="aspect-[4/3] skeleton-paper rounded-xl" />
                 <div className="space-y-4">
-                    <div className="h-5 w-2/3 skeleton-shimmer rounded" />
-                    <div className="h-4 w-full skeleton-shimmer rounded" />
-                    <div className="h-4 w-5/6 skeleton-shimmer rounded" />
+                    <div className="h-4 w-24 skeleton-paper rounded" />
+                    <div className="h-8 w-2/3 skeleton-paper rounded" />
+                    <div className="h-4 w-full skeleton-paper rounded" />
+                    <div className="h-4 w-5/6 skeleton-paper rounded" />
                 </div>
             </div>
         </div>
@@ -90,11 +103,12 @@ function Editor({ tour }: { tour: Tour | null }) {
     const createTour = useCreateTour()
     const updateTour = useUpdateTour()
     const deleteTour = useDeleteTour()
+    const { data: allTours = [] } = useTours()
+    const { data: testimonials = [] } = useQuery({ queryKey: ['testimonials'], queryFn: listTestimonials })
 
     const [baseline, setBaseline] = useState<TourInput>(() => (tour ? toDraft(tour) : EMPTY_TOUR))
     const [draft, setDraft] = useState<TourInput>(baseline)
     const [slugTouched, setSlugTouched] = useState(!isNew)
-    const [tab, setTab] = useState<TabId>('overview')
     const [errors, setErrors] = useState<DraftErrors | null>(null)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [notice, setNotice] = useState<string | null>(null)
@@ -104,6 +118,14 @@ function Editor({ tour }: { tour: Tour | null }) {
     const dirty = JSON.stringify(draft) !== JSON.stringify(baseline)
     const saving = createTour.isPending || updateTour.isPending
     const invalid = (field: keyof TourInput) => Boolean(errors?.fields[field])
+    const invalidItem = (key: string) => Boolean(errors?.items.has(key))
+
+    const suggestedTours = useMemo(() => {
+        const remaining = allTours.filter((item) => item.id !== tour?.id)
+        const sameRegion = remaining.filter((item) => item.region === draft.region)
+        const others = remaining.filter((item) => item.region !== draft.region)
+        return [...sameRegion, ...others].slice(0, 3)
+    }, [allTours, tour?.id, draft.region])
 
     const blocker = useBlocker(
         ({ currentLocation, nextLocation }) =>
@@ -134,6 +156,20 @@ function Editor({ tour }: { tour: Tour | null }) {
             const result = validateDraft(next)
             setErrors(result.messages.length > 0 ? result : null)
         }
+    }
+
+    const setExperience = (index: number, key: keyof TourExperience, value: string) => {
+        setField(
+            'experiences',
+            draft.experiences.map((experience, i) => (i === index ? { ...experience, [key]: value } : experience)),
+        )
+    }
+
+    const setListItem = (field: 'storyTitles' | 'travelTips', index: number, value: string) => {
+        setField(
+            field,
+            draft[field].map((item, i) => (i === index ? value : item)),
+        )
     }
 
     const leaveTo = (to: string) => {
@@ -181,7 +217,7 @@ function Editor({ tour }: { tour: Tour | null }) {
         }
     }
 
-    const durationText = draft.duration.trim().toLowerCase() || 'multi-day'
+    const location = draft.location || 'this destination'
 
     return (
         <div>
@@ -263,6 +299,19 @@ function Editor({ tour }: { tour: Tour | null }) {
                     />
                     {draft.featured ? 'Featured on home page' : 'Not featured'}
                 </button>
+                <div className="sm:col-span-3">
+                    <label htmlFor="destination-seo" className={labelClass}>
+                        SEO description
+                    </label>
+                    <textarea
+                        id="destination-seo"
+                        rows={2}
+                        value={draft.shortDescription}
+                        placeholder="One or two sentences shown in search results and link previews"
+                        onChange={(event) => setField('shortDescription', event.target.value)}
+                        className={`${fieldClass} resize-y ${invalid('shortDescription') ? 'border-red-600/70' : ''}`}
+                    />
+                </div>
             </div>
 
             {errors || saveError || notice ? (
@@ -292,11 +341,12 @@ function Editor({ tour }: { tour: Tour | null }) {
 
             <p className="mb-3 flex items-center gap-2 text-xs text-ink/55">
                 <Info size={13} strokeWidth={1.6} aria-hidden />
-                This is the live page layout. Click any text or image to edit it.
+                This is the live page layout. Click any text or image to edit it. Sections marked
+                “Fixed” are the same on every destination.
             </p>
 
-            <div className="@container overflow-hidden rounded-2xl border border-white/10 bg-ink font-sans text-silver">
-                <div className="relative h-[60svh] min-h-[24rem] overflow-hidden @4xl:h-[56svh]">
+            <div className="@container luxury-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
+                <section className="relative flex h-[34rem] items-end overflow-hidden">
                     <EditableImage
                         className="absolute inset-0"
                         src={draft.coverImage}
@@ -307,195 +357,215 @@ function Editor({ tour }: { tour: Tour | null }) {
                         invalid={invalid('coverImage')}
                         onChange={(url) => setField('coverImage', url)}
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/30 to-black/60" />
-
-                    <div className="pointer-events-none relative z-10 flex h-full flex-col justify-end px-5 sm:px-8">
-                        <div className="grid items-end gap-8 @3xl:grid-cols-[0.85fr_1.15fr] @3xl:gap-14">
-                            <div className="hidden h-56 @3xl:block" aria-hidden />
-                            <div className="pointer-events-auto pb-8 @3xl:pb-10">
-                                <span className="mb-4 inline-flex items-center gap-2 text-sm text-white/90">
-                                    <ArrowLeft size={16} strokeWidth={1.5} />
-                                    Back to destinations
-                                </span>
+                    <div className="pointer-events-none absolute inset-0 bg-[#071831]/22" />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-[#071831]/85 via-[#071831]/42 to-transparent" />
+                    <div className={`${container} pointer-events-none relative z-10 pb-12 @2xl:pb-16`}>
+                        <span className="inline-flex items-center gap-2 text-sm text-white/80">
+                            <ArrowLeft size={16} />
+                            Back to destinations
+                        </span>
+                        <div className="pointer-events-auto mt-7 max-w-4xl">
+                            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-gold">
+                                <MapPin size={14} className="shrink-0" />
                                 <EditableText
-                                    as="h1"
-                                    className="text-3xl font-semibold text-white @xl:text-4xl @4xl:text-5xl"
-                                    value={draft.title}
-                                    label="Title"
-                                    placeholder="Destination title"
-                                    invalid={invalid('title')}
-                                    onChange={(value) => setField('title', value)}
-                                />
-                                <EditableText
-                                    className="mt-2 text-base text-white/80 @xl:text-lg"
-                                    value={draft.tagline}
-                                    label="Tagline"
-                                    placeholder="A short tagline"
-                                    invalid={invalid('tagline')}
-                                    onChange={(value) => setField('tagline', value)}
+                                    as="span"
+                                    className="min-w-24"
+                                    editClassName={darkEdit}
+                                    value={draft.location}
+                                    label="Location"
+                                    placeholder="City, country"
+                                    invalid={invalid('location')}
+                                    onChange={(value) => setField('location', value)}
                                 />
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="min-w-0 px-5 pb-12 sm:px-8">
-                    <div className="grid min-w-0 items-stretch gap-8 @3xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] @3xl:gap-14">
-                        <div className="relative z-10 flex min-w-0 flex-col overflow-hidden rounded-3xl @3xl:-mt-56 @3xl:h-[calc(100%+14rem)]">
-                            <div aria-hidden className="h-44 shrink-0 bg-gold-band @3xl:h-56" />
-                            <aside className="flex min-h-[22rem] flex-1 flex-col gap-7 bg-[#242424] px-6 py-8 sm:px-7">
-                                <dl className="space-y-5">
-                                    <SidePanelField icon={MapPin} term="Location">
-                                        <EditableText
-                                            as="dd"
-                                            className="mt-1.5 text-sm text-silver/90"
-                                            value={draft.location}
-                                            label="Location"
-                                            placeholder="Country or region"
-                                            invalid={invalid('location')}
-                                            onChange={(value) => setField('location', value)}
-                                        />
-                                    </SidePanelField>
-                                    <SidePanelField icon={Clock3} term="Duration">
-                                        <EditableText
-                                            as="dd"
-                                            className="mt-1.5 text-sm text-silver/90"
-                                            value={draft.duration}
-                                            label="Duration"
-                                            placeholder="e.g. 5 Days / 4 Nights"
-                                            invalid={invalid('duration')}
-                                            onChange={(value) => setField('duration', value)}
-                                        />
-                                    </SidePanelField>
-                                    <SidePanelField icon={Sparkles} term="Price">
-                                        <EditableText
-                                            as="dd"
-                                            className="mt-1.5 text-sm text-silver/90"
-                                            value={draft.startingPrice}
-                                            label="Price"
-                                            placeholder="e.g. From ₱45,000"
-                                            invalid={invalid('startingPrice')}
-                                            onChange={(value) => setField('startingPrice', value)}
-                                        />
-                                    </SidePanelField>
-                                </dl>
-
-                                <span className="btn-gold inline-flex w-fit cursor-default rounded-xl px-6 py-3 text-sm opacity-90">
-                                    Inquire
-                                </span>
-                            </aside>
-                        </div>
-
-                        <div className="min-w-0 max-w-full pt-8 @3xl:pt-10">
-                            <SectionTabs
-                                tone="dark"
-                                label="Destination sections"
-                                tabs={TABS}
-                                value={tab}
-                                onChange={(id) => setTab(id)}
+                            <EditableText
+                                as="h1"
+                                className="mt-3 font-noto-serif text-5xl leading-[1.04] text-white @2xl:text-6xl @5xl:text-7xl"
+                                editClassName={darkEdit}
+                                value={draft.title}
+                                label="Title"
+                                placeholder="Destination title"
+                                invalid={invalid('title')}
+                                onChange={(value) => setField('title', value)}
                             />
-
-                            <div className="pt-8">
-                                <AnimatePresence mode="wait">
-                                    <motion.div
-                                        key={tab}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 6 }}
-                                        transition={{ duration: 0.28 }}
-                                        className="min-w-0 max-w-full"
-                                    >
-                                        {tab === 'overview' && (
-                                            <div className="space-y-10">
-                                                <div>
-                                                    <p className="text-sm uppercase tracking-[0.22em] text-gold">
-                                                        {draft.location || 'Location'}
-                                                    </p>
-                                                    <div className="mt-3 max-w-2xl text-base leading-relaxed text-silver/90">
-                                                        <EditableText
-                                                            multiline
-                                                            className="inline"
-                                                            value={draft.shortDescription}
-                                                            label="Short description"
-                                                            placeholder="A short description of the journey"
-                                                            invalid={invalid('shortDescription')}
-                                                            onChange={(value) => setField('shortDescription', value)}
-                                                        />{' '}
-                                                        <span className="text-silver/45" title="Fixed text on the site">
-                                                            This {durationText} itinerary is paced for discovery
-                                                            rather than haste, with a host who stays with you from
-                                                            arrival to departure.
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <h2 className="font-serif text-2xl text-gold-gradient">Highlights</h2>
-                                                    <div className="mt-5">
-                                                        <EditableList
-                                                            variant="cards"
-                                                            itemLabel="highlight"
-                                                            className="grid gap-3 @xl:grid-cols-2"
-                                                            items={draft.highlights}
-                                                            onChange={(items) => setField('highlights', items)}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <GalleryEditor
-                                                    title={draft.title || 'Destination'}
-                                                    images={draft.gallery}
-                                                    onChange={(images) => setField('gallery', images)}
-                                                />
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setTab('trips')}
-                                                    className="text-sm text-gold transition hover:text-ivory"
-                                                >
-                                                    View organized trips →
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {tab === 'trips' && (
-                                            <TripsPanel
-                                                draft={draft}
-                                                setField={setField}
-                                                invalid={invalid}
-                                                showErrors={Boolean(errors)}
-                                            />
-                                        )}
-                                        {tab === 'flights' && (
-                                            <FixedServicePanel
-                                                title="Flights"
-                                                body={`Airfare into ${draft.location || 'this destination'} is arranged privately for each departure. Share your dates and preferred cabin, and we will source the most comfortable routing.`}
-                                                ctaLabel="Request flights"
-                                                extraLabel="Flights desk"
-                                            />
-                                        )}
-                                        {tab === 'hotels' && (
-                                            <FixedServicePanel
-                                                title="Hotels"
-                                                body="Stays are selected for setting, quiet, and ease of movement — not a public inventory list. Tell us how you like to sleep and we will shortlist the right rooms."
-                                                ctaLabel="Request hotels"
-                                                extraLabel="Hotels desk"
-                                            />
-                                        )}
-                                        {tab === 'cars' && (
-                                            <FixedServicePanel
-                                                title="Cars"
-                                                body="Airport greetings, private cars, and island transfers are arranged by inquiry alongside the journey. Share pickup details and we will match the right vehicle."
-                                                ctaLabel="Request transfers"
-                                                extraLabel="Cars desk"
-                                            />
-                                        )}
-                                    </motion.div>
-                                </AnimatePresence>
-                            </div>
+                            <EditableText
+                                className="mt-4 max-w-2xl text-base leading-7 text-white/75 @2xl:text-lg"
+                                editClassName={darkEdit}
+                                value={draft.tagline}
+                                label="Tagline"
+                                placeholder="A short tagline"
+                                invalid={invalid('tagline')}
+                                onChange={(value) => setField('tagline', value)}
+                            />
+                            <span className="mt-7 inline-flex items-center gap-2 border border-white/45 bg-white/10 px-6 py-3 text-sm text-white backdrop-blur-sm">
+                                Plan this destination <ArrowRight size={15} />
+                            </span>
                         </div>
                     </div>
-                </div>
+                </section>
+
+                {EXPERIENCE_CATEGORIES.map((category, index) => {
+                    const experience = draft.experiences[index]
+                    const reverse = index % 2 === 1
+                    return (
+                        <section key={category.label} className={`py-16 @2xl:py-24 ${reverse ? 'bg-white/45' : ''}`}>
+                            {index === 0 ? (
+                                <div className={`${container} relative mb-6 @2xl:mb-20`}>
+                                    <FixedBadge />
+                                    <p className="text-xs uppercase tracking-[0.28em] text-[#9b7512]">
+                                        Things to see · Digital Experience
+                                    </p>
+                                    <h2 className="mt-3 font-noto-serif text-4xl text-royal @2xl:text-5xl">
+                                        Explore before you travel
+                                    </h2>
+                                    <p className="mt-5 text-sm leading-7 text-ink/55">
+                                        Begin with what to see, then continue through the flavors, experiences,
+                                        culture, and everyday life that give this destination its character.
+                                    </p>
+                                </div>
+                            ) : null}
+                            <article className={`${container} grid items-center gap-9 @4xl:grid-cols-2 @4xl:gap-16`}>
+                                <EditableImage
+                                    className={`relative aspect-[4/3] overflow-hidden rounded-xl shadow-[0_20px_55px_rgba(22,55,101,0.12)] ${
+                                        reverse ? '@4xl:order-2' : ''
+                                    }`}
+                                    src={experience.image}
+                                    alt={`${category.label} in ${location}`}
+                                    label={`${category.label} image`}
+                                    imgClassName="object-cover"
+                                    invalid={invalidItem(`image-${index}`)}
+                                    onChange={(url) => setExperience(index, 'image', url)}
+                                />
+                                <div className={reverse ? '@4xl:order-1' : ''}>
+                                    <p className="text-xs uppercase tracking-[0.28em] text-[#9b7512]">{category.label}</p>
+                                    <EditableText
+                                        as="h3"
+                                        className="mt-3 font-noto-serif text-2xl leading-tight text-royal @2xl:text-4xl"
+                                        editClassName={lightEdit}
+                                        value={experience.headline}
+                                        label={`${category.label} headline`}
+                                        placeholder={`What to ${category.label.toLowerCase()} in ${location}`}
+                                        invalid={invalidItem(`headline-${index}`)}
+                                        onChange={(value) => setExperience(index, 'headline', value)}
+                                    />
+                                    <EditableText
+                                        multiline
+                                        className="mt-1 max-w-xl text-base leading-8 text-ink/65"
+                                        editClassName={lightEdit}
+                                        value={experience.summary}
+                                        label={`${category.label} summary`}
+                                        placeholder="One line on what this section covers"
+                                        invalid={invalidItem(`summary-${index}`)}
+                                        onChange={(value) => setExperience(index, 'summary', value)}
+                                    />
+                                    <EditableText
+                                        multiline
+                                        className="mt-4 max-w-xl text-sm leading-7 text-ink/50"
+                                        editClassName={lightEdit}
+                                        value={experience.body}
+                                        label={`${category.label} story`}
+                                        placeholder="A short story, local tip, or cultural detail"
+                                        invalid={invalidItem(`body-${index}`)}
+                                        onChange={(value) => setExperience(index, 'body', value)}
+                                    />
+                                    <span className="mt-7 block h-px w-16 bg-[#9b7512]/55" />
+                                </div>
+                            </article>
+                        </section>
+                    )
+                })}
+
+                <StoriesSection
+                    titles={draft.storyTitles}
+                    location={location}
+                    testimonials={testimonials}
+                    invalidItem={invalidItem}
+                    onChange={(index, value) => setListItem('storyTitles', index, value)}
+                />
+
+                <section className="relative overflow-hidden bg-royal py-20 text-white @2xl:py-28">
+                    <div aria-hidden className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.7)_1px,transparent_1px)] [background-size:48px_48px]" />
+                    <div className={`${container} relative grid gap-12 @4xl:grid-cols-[0.7fr_1.3fr] @4xl:gap-20`}>
+                        <div>
+                            <p className="text-xs uppercase tracking-[0.28em] text-gold">Travel Tips · Briefing</p>
+                            <h2 className="mt-3 font-noto-serif text-4xl @2xl:text-5xl">Know before you go</h2>
+                            <div className="mt-7 inline-flex items-center gap-2 border border-white/15 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-white/55">
+                                <MapPin size={12} className="text-gold" />
+                                Prepared for {location}
+                            </div>
+                        </div>
+                        <ol className="grid gap-x-9 @2xl:grid-cols-2">
+                            {draft.travelTips.map((tip, index) => {
+                                const Icon = TIP_ICONS[index % TIP_ICONS.length]
+                                return (
+                                    <li key={index} className="flex gap-4 border-t border-gold/25 py-6">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gold/35 text-gold">
+                                            <Icon size={16} strokeWidth={1.5} />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <span className="text-[10px] uppercase tracking-[0.18em] text-gold/65">
+                                                Brief 0{index + 1}
+                                            </span>
+                                            <EditableText
+                                                multiline
+                                                className="mt-2 text-sm leading-7 text-white/72"
+                                                editClassName={darkEdit}
+                                                value={tip}
+                                                label={`Travel tip ${index + 1}`}
+                                                placeholder="A practical tip for this destination"
+                                                invalid={invalidItem(`tip-${index}`)}
+                                                onChange={(value) => setListItem('travelTips', index, value)}
+                                            />
+                                        </div>
+                                    </li>
+                                )
+                            })}
+                        </ol>
+                    </div>
+                </section>
+
+                <ClientExperiences testimonials={testimonials} location={location} />
+
+                {suggestedTours.length > 0 ? (
+                    <section className="relative bg-oat py-20 @2xl:py-28">
+                        <div className={`${container} relative`}>
+                            <FixedBadge />
+                            <p className="text-xs uppercase tracking-[0.28em] text-[#9b7512]">Continue exploring</p>
+                            <h2 className="mt-3 font-noto-serif text-4xl text-royal @2xl:text-5xl">Suggested destinations</h2>
+                            <div className="mt-9 grid gap-5 @3xl:grid-cols-3">
+                                {suggestedTours.map((item) => (
+                                    <div key={item.id} className="relative aspect-[4/3] overflow-hidden rounded-xl border border-royal/10">
+                                        <SafeImage
+                                            src={item.coverImage}
+                                            alt={item.title}
+                                            className="absolute inset-0 h-full w-full"
+                                            imgClassName={`object-cover ${cardCoverFocus(item.id)}`}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                                        <div className="absolute inset-x-0 bottom-0 p-5">
+                                            <p className="text-[10px] uppercase tracking-[0.2em] text-gold">{item.location}</p>
+                                            <h3 className="mt-2 font-noto-serif text-2xl text-white">{item.title}</h3>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                ) : null}
+
+                <section className="relative overflow-hidden bg-royal py-20 text-white @2xl:py-28">
+                    <div aria-hidden className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.65)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.65)_1px,transparent_1px)] [background-size:48px_48px]" />
+                    <div className={`${container} relative text-center`}>
+                        <FixedBadge tone="dark" />
+                        <p className="text-xs uppercase tracking-[0.28em] text-gold">Where will your AVENture take you?</p>
+                        <h2 className="mx-auto mt-4 max-w-4xl font-noto-serif text-4xl leading-tight @2xl:text-5xl @5xl:text-6xl">
+                            Think beyond the visa. Dream about the destination.
+                        </h2>
+                        <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/65">
+                            Explore a destination. Discover the experience. Start imagining yourself there.
+                        </p>
+                    </div>
+                </section>
             </div>
 
             <ConfirmDialog
@@ -522,166 +592,148 @@ function Editor({ tour }: { tour: Tour | null }) {
     )
 }
 
-function SidePanelField({
-    icon: Icon,
-    term,
-    children,
+function StoriesSection({
+    titles,
+    location,
+    testimonials,
+    invalidItem,
+    onChange,
 }: {
-    icon: typeof MapPin
-    term: string
-    children: ReactNode
+    titles: string[]
+    location: string
+    testimonials: Testimonial[]
+    invalidItem: (key: string) => boolean
+    onChange: (index: number, value: string) => void
 }) {
     return (
-        <div>
-            <dt className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-gold/70">
-                <Icon size={12} strokeWidth={1.6} />
-                {term}
-            </dt>
-            {children}
-        </div>
+        <section className="py-20 @2xl:py-28">
+            <div className={container}>
+                <p className="text-xs uppercase tracking-[0.28em] text-[#9b7512]">Must Try · Traveler Stories</p>
+                <div className="mt-3 flex flex-col justify-between gap-5 @2xl:flex-row @2xl:items-end">
+                    <h2 className="font-noto-serif text-4xl text-royal @2xl:text-5xl">Stories worth following</h2>
+                    <span className="inline-flex items-center gap-2 text-sm text-[#9b7512]">
+                        Read more stories <ArrowRight size={15} />
+                    </span>
+                </div>
+                <div className="mt-9 grid gap-5 @3xl:grid-cols-3">
+                    {titles.map((title, index) => {
+                        const story = testimonials.length ? testimonials[index % testimonials.length] : null
+                        const name = story?.name ?? 'AVENtures Traveler'
+                        const initials = name
+                            .split(/\s+/)
+                            .map((part) => part[0])
+                            .join('')
+                            .slice(0, 2)
+                            .toUpperCase()
+                        return (
+                            <article
+                                key={index}
+                                className="rounded-xl border border-royal/10 bg-white/50 p-6 shadow-[0_12px_35px_rgba(22,55,101,0.06)]"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-royal font-noto-serif text-sm text-gold">
+                                        {initials}
+                                    </span>
+                                    <div>
+                                        <p className="text-sm font-medium text-royal">{name}</p>
+                                        <p className="mt-0.5 text-xs text-ink/40">{story?.trip ?? location}</p>
+                                    </div>
+                                </div>
+                                <EditableText
+                                    as="h3"
+                                    className="mt-6 font-noto-serif text-2xl text-royal"
+                                    editClassName={lightEdit}
+                                    value={title}
+                                    label={`Story ${index + 1} title`}
+                                    placeholder="A must-try moment"
+                                    invalid={invalidItem(`story-${index}`)}
+                                    onChange={(value) => onChange(index, value)}
+                                />
+                                <p
+                                    className="mt-3 text-sm leading-7 text-ink/55"
+                                    title="Quotes come from the site testimonials"
+                                >
+                                    <Lock size={11} strokeWidth={1.8} className="mr-1.5 inline text-ink/35" aria-hidden />
+                                    “{story?.quote ?? `A memorable part of our journey through ${location}.`}”
+                                </p>
+                            </article>
+                        )
+                    })}
+                </div>
+            </div>
+        </section>
     )
 }
 
-function TripsPanel({
-    draft,
-    setField,
-    invalid,
-    showErrors,
-}: {
-    draft: TourInput
-    setField: SetField
-    invalid: (field: keyof TourInput) => boolean
-    showErrors: boolean
-}) {
+function ClientExperiences({ testimonials, location }: { testimonials: Testimonial[]; location: string }) {
+    const [activeIndex, setActiveIndex] = useState(0)
+    const stories = testimonials.length
+        ? testimonials.slice(0, 5)
+        : [
+              {
+                  id: 'fallback',
+                  name: 'AVENtures Traveler',
+                  trip: location,
+                  quote: 'Every detail felt considered, while the journey still left room for us to experience the destination in our own way.',
+                  rating: 5,
+              },
+          ]
+    const activeStory = stories[activeIndex % stories.length]
+    const move = (direction: -1 | 1) =>
+        setActiveIndex((current) => (current + direction + stories.length) % stories.length)
+
     return (
-        <div className="space-y-8">
-            <div className="rounded-2xl border border-white/8 bg-ink-card/70 p-6 sm:p-8">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-gold">Signature journey</p>
-                <EditableText
-                    as="h2"
-                    className="mt-2 font-serif text-2xl text-white @xl:text-3xl"
-                    value={draft.title}
-                    label="Title"
-                    placeholder="Destination title"
-                    invalid={invalid('title')}
-                    onChange={(value) => setField('title', value)}
-                />
-                <EditableText
-                    className="mt-2 text-sm text-silver/75"
-                    value={draft.tagline}
-                    label="Tagline"
-                    placeholder="A short tagline"
-                    invalid={invalid('tagline')}
-                    onChange={(value) => setField('tagline', value)}
-                />
-                <div className="mt-5 flex flex-wrap gap-3 text-xs">
-                    <span className="rounded-full border border-gold/30 px-3.5 py-1.5 text-gold">
-                        {draft.duration || 'Duration'}
-                    </span>
-                    <span className="rounded-full border border-white/15 px-3.5 py-1.5 text-white">
-                        {draft.startingPrice || 'Price'}
-                    </span>
-                </div>
-                <EditableText
-                    multiline
-                    className="mt-5 text-sm leading-relaxed text-silver/85"
-                    value={draft.shortDescription}
-                    label="Short description"
-                    placeholder="A short description of the journey"
-                    invalid={invalid('shortDescription')}
-                    onChange={(value) => setField('shortDescription', value)}
-                />
-            </div>
-
-            <div>
-                <h3 className="font-serif text-xl text-gold-gradient">Itinerary</h3>
-                <ItineraryEditor
-                    days={draft.itinerary}
-                    showErrors={showErrors}
-                    onChange={(days) => setField('itinerary', days)}
-                />
-            </div>
-
-            <div className="grid gap-8 @xl:grid-cols-2">
-                <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-gold">Inclusions</h3>
-                    <div className="mt-3">
-                        <EditableList
-                            variant="bullets"
-                            itemLabel="inclusion"
-                            className="space-y-2"
-                            items={draft.inclusions}
-                            onChange={(items) => setField('inclusions', items)}
-                        />
-                    </div>
-                </div>
-                <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-gold">Exclusions</h3>
-                    <div className="mt-3">
-                        <EditableList
-                            variant="bullets"
-                            itemLabel="exclusion"
-                            className="space-y-2"
-                            items={draft.exclusions}
-                            onChange={(items) => setField('exclusions', items)}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="relative rounded-2xl border border-gold/20 p-6 sm:p-7">
+        <section className="relative py-20 @2xl:py-28">
+            <div className={`${container} relative`}>
                 <FixedBadge />
-                <h3 className="font-serif text-xl text-gold-gradient">Prefer a custom pace?</h3>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-                    Dates, room categories, and side trips can be reshaped around your group. This
-                    itinerary is the starting sketch — not a fixed departure.
-                </p>
-                <span className="btn-gold mt-5 inline-flex cursor-default rounded-xl px-7 py-3 text-sm opacity-90">
-                    Inquire about this tour
-                </span>
+                <div className="text-center">
+                    <p className="text-xs uppercase tracking-[0.28em] text-[#9b7512]">Client Experiences · Feedback</p>
+                    <h2 className="mt-3 font-noto-serif text-4xl text-royal @2xl:text-5xl">Journeys shared by travelers</h2>
+                </div>
+                <div className="relative mt-8 px-0 @2xl:px-16">
+                    <button
+                        type="button"
+                        onClick={() => move(-1)}
+                        aria-label="Previous client experience"
+                        className="absolute left-0 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-royal/20 text-royal transition hover:border-[#9b7512] hover:bg-[#9b7512] hover:text-white @2xl:flex"
+                    >
+                        <ChevronLeft size={19} />
+                    </button>
+                    <div className="text-center">
+                        <Quote className="mx-auto text-[#9b7512]/30" size={42} />
+                        <blockquote className="mx-auto mt-5 max-w-4xl text-xl leading-relaxed text-royal/85 @2xl:text-2xl">
+                            “{activeStory.quote}”
+                        </blockquote>
+                        <p className="mt-7 text-xs uppercase tracking-[0.2em] text-ink/45">
+                            {activeStory.name} · {activeStory.trip}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => move(1)}
+                        aria-label="Next client experience"
+                        className="absolute right-0 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-royal/20 text-royal transition hover:border-[#9b7512] hover:bg-[#9b7512] hover:text-white @2xl:flex"
+                    >
+                        <ChevronRight size={19} />
+                    </button>
+                </div>
             </div>
-        </div>
+        </section>
     )
 }
 
-function FixedServicePanel({
-    title,
-    body,
-    ctaLabel,
-    extraLabel,
-}: {
-    title: string
-    body: string
-    ctaLabel: string
-    extraLabel: string
-}) {
-    return (
-        <div className="relative max-w-xl py-6">
-            <FixedBadge />
-            <p className="text-[10px] uppercase tracking-[0.28em] text-gold/80">By request</p>
-            <h2 className="mt-3 font-serif text-3xl text-gold-gradient">{title}</h2>
-            <span className="mt-5 block h-px w-16 bg-gold/40" />
-            <p className="mt-5 text-sm leading-relaxed text-silver/80">{body}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-                <span className="btn-gold inline-flex cursor-default rounded-xl px-6 py-3 text-sm opacity-90">
-                    {ctaLabel}
-                </span>
-                <span className="inline-flex cursor-default rounded-xl border border-white/15 px-6 py-3 text-sm text-silver/80">
-                    {extraLabel}
-                </span>
-            </div>
-        </div>
-    )
-}
-
-function FixedBadge() {
+function FixedBadge({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
     return (
         <span
             title="This copy is the same on every destination and is not editable here."
-            className="absolute right-0 top-0 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-silver/60 sm:right-3 sm:top-3"
+            className={`absolute right-6 top-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] @2xl:right-8 ${
+                tone === 'dark'
+                    ? 'border-white/15 bg-white/5 text-white/60'
+                    : 'border-royal/15 bg-white/60 text-ink/50'
+            }`}
         >
             <Lock size={10} strokeWidth={1.8} aria-hidden />
-            Fixed text
+            Fixed
         </span>
     )
 }

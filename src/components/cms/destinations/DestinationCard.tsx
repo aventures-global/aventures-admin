@@ -50,10 +50,6 @@ export default function DestinationCard({ tour, lifted = false }: DestinationCar
                 </p>
                 <h2 className="mt-1.5 font-serif text-xl leading-snug text-white">{tour.title}</h2>
                 <p className="mt-1 text-sm text-white/70">{tour.tagline}</p>
-                <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3 text-[10px] uppercase tracking-[0.16em] text-gold/75">
-                    <span>{tour.duration}</span>
-                    <span>{tour.startingPrice}</span>
-                </div>
             </div>
         </div>
     )

@@ -81,7 +81,7 @@ export default function FaqPreviewTab() {
                             <h1 className="mt-4 font-noto-serif text-4xl text-ink sm:text-5xl">
                                 Frequently Asked Questions
                             </h1>
-                            <p className="mt-5 font-noto-serif text-xl text-royal sm:text-2xl">
+                            <p className="mt-5 font-poppins text-xl text-royal sm:text-2xl">
                                 Have a question about your AVENture?
                             </p>
                             <p className="mt-3 max-w-2xl text-base leading-8 text-ink/60">
