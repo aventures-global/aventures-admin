@@ -26,7 +26,7 @@ export default function AdminLayout() {
 
     return (
         <div className="luxury-paper min-h-svh font-poppins">
-            <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 border-r border-royal/10 bg-cream lg:block">
+            <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-royal/10 bg-cream lg:block">
                 <Sidebar />
             </aside>
 
@@ -64,7 +64,7 @@ export default function AdminLayout() {
                             animate={{ x: 0 }}
                             exit={{ x: '-100%' }}
                             transition={{ duration: 0.25, ease: 'easeOut' }}
-                            className="fixed inset-y-0 left-0 z-50 w-60 max-w-[80vw] border-r border-royal/10 bg-cream shadow-[0_18px_40px_rgba(22,55,101,0.14)] lg:hidden"
+                            className="fixed inset-y-0 left-0 z-50 w-64 max-w-[80vw] border-r border-royal/10 bg-cream shadow-[0_18px_40px_rgba(22,55,101,0.14)] lg:hidden"
                             role="dialog"
                             aria-modal="true"
                             aria-label="Navigation"
@@ -83,7 +83,7 @@ export default function AdminLayout() {
                 ) : null}
             </AnimatePresence>
 
-            <main className="lg:pl-56">
+            <main className="lg:pl-60">
                 <div className="w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                     <Outlet />
                 </div>

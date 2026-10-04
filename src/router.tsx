@@ -1,23 +1,33 @@
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router-dom'
 import AdminLayout from './components/layout/AdminLayout'
 import { PublicOnly, RequireStaff } from './components/RouteGuards'
-import { CMS_BASE, cmsItems, cmsPath } from './config/navigation'
+import { navGroups, pagePath } from './config/navigation'
 import Dashboard from './pages/Dashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import Login from './pages/Login'
+import PlannedPage from './pages/PlannedPage'
 import ResetPassword from './pages/ResetPassword'
 import Signup from './pages/Signup'
 import VerifyEmail from './pages/VerifyEmail'
 import VerifyReset from './pages/VerifyReset'
 
-const cmsRoutes: RouteObject[] = cmsItems.map(({ path, element: Page, routes = [] }) => ({
-    path,
+const groupRoutes: RouteObject[] = navGroups.map((group) => ({
+    path: group.base,
     children: [
-        { index: true, element: <Page /> },
-        ...routes.map(({ path: childPath, element: Child }) => ({
-            path: childPath,
-            element: <Child />,
-        })),
+        { index: true, element: <Navigate to={pagePath(group, group.pages[0])} replace /> },
+        ...group.pages.map((page) => {
+            const Page = page.element
+            return {
+                path: page.path,
+                children: [
+                    { index: true, element: Page ? <Page /> : <PlannedPage group={group} page={page} /> },
+                    ...(page.routes ?? []).map(({ path, element: Child }) => ({
+                        path,
+                        element: <Child />,
+                    })),
+                ],
+            }
+        }),
     ],
 }))
 
@@ -37,16 +47,7 @@ export const router = createBrowserRouter([
                 <AdminLayout />
             </RequireStaff>
         ),
-        children: [
-            { index: true, element: <Dashboard /> },
-            {
-                path: CMS_BASE,
-                children: [
-                    { index: true, element: <Navigate to={cmsPath(cmsItems[0])} replace /> },
-                    ...cmsRoutes,
-                ],
-            },
-        ],
+        children: [{ index: true, element: <Dashboard /> }, ...groupRoutes],
     },
     ...publicPages.map(({ path, Page }) => ({
         path,

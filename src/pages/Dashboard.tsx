@@ -1,41 +1,33 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
-import { cmsItems, cmsPath, type CmsItem } from '../config/navigation'
+import WaveBadge from '../components/WaveBadge'
+import {
+    WAVE_LABELS,
+    WAVE_ORDER,
+    isReady,
+    navGroups,
+    pagePath,
+    type NavGroup,
+    type NavPage,
+    type Wave,
+} from '../config/navigation'
 
-type Capability = {
-    summary: string
-    features: string[]
-    available: boolean
+const WAVE_INTROS: Record<Wave, string> = {
+    live: 'Tools you can use today.',
+    next: 'The next screens to build: the core client workflow from the proposal and the content the public site already shows.',
+    later: 'Modules planned after the core workflow is running.',
+    suggested: 'Ideas beyond the proposal that would round out the system.',
 }
 
-const CAPABILITIES: Record<string, Capability> = {
-    destinations: {
-        summary: 'Signature journeys on the public Destinations page.',
-        features: [
-            'Search, filter, and sort in card or table view',
-            'Drag cards to set the custom display order',
-            'Create and edit destinations in the live page layout',
-            'Edit cover, highlights, stories, and travel tips',
-        ],
-        available: true,
-    },
-    faqs: {
-        summary: 'Questions on the public FAQ page and beside the homepage contact form.',
-        features: [
-            'Add, edit, search, and delete FAQs',
-            'Create, rename, and reorder categories',
-            'Choose the FAQs shown beside the contact form',
-            'Preview the public FAQ page',
-        ],
-        available: true,
-    },
-    'visa-services': {
-        summary: 'Visa service pages on the public site.',
-        features: [],
-        available: false,
-    },
-}
+type Entry = { group: NavGroup; page: NavPage }
+
+const entriesByWave = WAVE_ORDER.map((wave) => ({
+    wave,
+    entries: navGroups.flatMap((group) =>
+        group.pages.filter((page) => page.wave === wave).map((page): Entry => ({ group, page })),
+    ),
+})).filter(({ entries }) => entries.length > 0)
 
 export default function Dashboard() {
     return (
@@ -43,85 +35,80 @@ export default function Dashboard() {
             <PageHeader
                 eyebrow="Overview"
                 title="Dashboard"
-                description="What the admin site can do right now. More tools will appear here as they are built."
+                description="Everything the admin site does today and every screen planned next. Each card opens its page; unbuilt pages explain what they will cover."
             />
 
-            <ul className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {cmsItems.map((item) => (
-                    <li key={item.path} className="flex">
-                        <CapabilityCard item={item} capability={CAPABILITIES[item.path]} />
-                    </li>
-                ))}
-            </ul>
+            {entriesByWave.map(({ wave, entries }) => (
+                <section key={wave} className="mt-10" aria-labelledby={`wave-${wave}`}>
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-royal/10 pb-3">
+                        <h2 id={`wave-${wave}`} className="font-noto-serif text-2xl text-ink">
+                            {WAVE_LABELS[wave]}
+                        </h2>
+                        <span className="text-sm text-ink/50">
+                            {entries.length} {entries.length === 1 ? 'page' : 'pages'}
+                        </span>
+                        <p className="w-full text-sm text-ink/60">{WAVE_INTROS[wave]}</p>
+                    </div>
+
+                    <ul className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {entries.map(({ group, page }) => (
+                            <li key={pagePath(group, page)} className="flex">
+                                <RoadmapCard group={group} page={page} />
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            ))}
         </div>
     )
 }
 
-function CapabilityCard({ item, capability }: { item: CmsItem; capability?: Capability }) {
-    const Icon = item.icon
-    const available = capability?.available ?? false
+function RoadmapCard({ group, page }: Entry) {
+    const Icon = page.icon
+    const ready = isReady(page)
 
-    const body = (
-        <>
+    return (
+        <Link
+            to={pagePath(group, page)}
+            className={`paper-card group flex w-full flex-col rounded-[3px] p-5 transition hover:border-royal/30 hover:shadow-[0_18px_40px_rgba(22,55,101,0.1)] sm:p-6 ${
+                ready ? '' : 'opacity-90'
+            }`}
+        >
             <div className="flex items-start justify-between gap-3">
                 <span
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        available ? 'bg-royal text-gold' : 'bg-royal/10 text-ink/45'
+                        ready ? 'bg-royal text-gold' : 'bg-royal/10 text-ink/45'
                     }`}
                 >
                     <Icon size={18} strokeWidth={1.5} aria-hidden />
                 </span>
-                <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide ${
-                        available ? 'bg-emerald-600/10 text-emerald-700' : 'bg-royal/[0.06] text-ink/55'
-                    }`}
-                >
-                    {available ? 'Available' : 'Not built yet'}
-                </span>
+                <WaveBadge wave={page.wave} />
             </div>
 
-            <h2 className={`mt-5 font-noto-serif text-2xl ${available ? 'text-ink' : 'text-ink/60'}`}>
-                {item.label}
-            </h2>
-            {capability ? <p className="mt-2 text-sm leading-6 text-ink/60">{capability.summary}</p> : null}
+            <p className="mt-5 text-[11px] font-medium uppercase tracking-[0.24em] text-royal/70">{group.label}</p>
+            <h3 className={`mt-1 font-noto-serif text-2xl ${ready ? 'text-ink' : 'text-ink/70'}`}>{page.label}</h3>
+            <p className="mt-2 text-sm leading-6 text-ink/60">{page.summary}</p>
 
-            {capability && capability.features.length > 0 ? (
+            {ready ? (
                 <ul className="mt-4 space-y-1.5 text-sm text-ink/75">
-                    {capability.features.map((feature) => (
-                        <li key={feature} className="flex gap-2">
+                    {page.goals.map((goal) => (
+                        <li key={goal} className="flex gap-2">
                             <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gold-deep" />
-                            {feature}
+                            {goal}
                         </li>
                     ))}
                 </ul>
             ) : null}
 
-            {available ? (
-                <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-medium text-royal transition group-hover:text-gold-deep">
-                    Open {item.label}
-                    <ArrowRight
-                        size={15}
-                        strokeWidth={1.5}
-                        aria-hidden
-                        className="transition-transform group-hover:translate-x-0.5"
-                    />
-                </span>
-            ) : (
-                <p className="mt-auto pt-6 text-sm text-ink/50">Coming soon.</p>
-            )}
-        </>
-    )
-
-    const cardClass = 'paper-card flex w-full flex-col rounded-[3px] p-5 sm:p-6'
-
-    if (!available) return <div className={`${cardClass} opacity-80`}>{body}</div>
-
-    return (
-        <Link
-            to={cmsPath(item)}
-            className={`${cardClass} group transition hover:border-royal/30 hover:shadow-[0_18px_40px_rgba(22,55,101,0.1)]`}
-        >
-            {body}
+            <span className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-medium text-royal transition group-hover:text-gold-deep">
+                {ready ? `Open ${page.label}` : 'See the plan'}
+                <ArrowRight
+                    size={15}
+                    strokeWidth={1.5}
+                    aria-hidden
+                    className="transition-transform group-hover:translate-x-0.5"
+                />
+            </span>
         </Link>
     )
 }

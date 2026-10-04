@@ -1,14 +1,16 @@
-import { ChevronDown, ChevronsUpDown, Layers, LogOut } from 'lucide-react'
+import { ChevronDown, ChevronsUpDown, LogOut } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { CMS_BASE, cmsItems, cmsPath, dashboardItem } from '../../config/navigation'
+import { dashboardItem, isReady, navGroups, pagePath, type NavGroup } from '../../config/navigation'
 import { useAuth } from '../../lib/authContext'
 import BrandWordmark from '../BrandWordmark'
 
-function navLinkClass(active: boolean) {
+function navLinkClass(active: boolean, muted = false) {
     return `flex min-h-9 items-center gap-2.5 rounded-[3px] px-2.5 font-noto-serif text-[15px] tracking-wide transition-colors ${
-        active ? 'bg-royal/[0.06] text-gold-deep' : 'text-ink/75 hover:bg-royal/[0.04] hover:text-[#9b7512]'
+        active
+            ? 'bg-royal/[0.06] text-gold-deep'
+            : `${muted ? 'text-ink/45' : 'text-ink/75'} hover:bg-royal/[0.04] hover:text-[#9b7512]`
     }`
 }
 
@@ -20,17 +22,6 @@ function initialsFromName(name?: string) {
 }
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
-    const location = useLocation()
-    const cmsMenuId = useId()
-
-    const inCms = location.pathname === CMS_BASE || location.pathname.startsWith(`${CMS_BASE}/`)
-    const [cmsOpen, setCmsOpen] = useState(inCms)
-    const [wasInCms, setWasInCms] = useState(inCms)
-    if (inCms !== wasInCms) {
-        setWasInCms(inCms)
-        if (inCms) setCmsOpen(true)
-    }
-
     const DashboardIcon = dashboardItem.icon
 
     return (
@@ -52,60 +43,80 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     {dashboardItem.label}
                 </NavLink>
 
-                <div className="mt-0.5">
-                    <button
-                        type="button"
-                        aria-expanded={cmsOpen}
-                        aria-controls={cmsMenuId}
-                        onClick={() => setCmsOpen((value) => !value)}
-                        className={`${navLinkClass(false)} w-full ${inCms ? 'text-gold-deep' : ''}`}
-                    >
-                        <Layers size={15} strokeWidth={1.5} aria-hidden />
-                        <span className="flex-1 text-left">CMS</span>
-                        <ChevronDown
-                            size={14}
-                            strokeWidth={1.5}
-                            aria-hidden
-                            className={`transition-transform duration-200 ${cmsOpen ? 'rotate-180' : ''}`}
-                        />
-                    </button>
-
-                    <AnimatePresence initial={false}>
-                        {cmsOpen ? (
-                            <motion.ul
-                                id={cmsMenuId}
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="ml-4 overflow-hidden border-l border-royal/15 pl-1.5"
-                            >
-                                {cmsItems.map((item) => {
-                                    const Icon = item.icon
-                                    return (
-                                        <li key={item.path} className="py-px">
-                                            <NavLink
-                                                to={cmsPath(item)}
-                                                className={({ isActive }) =>
-                                                    `${navLinkClass(isActive)} text-sm`
-                                                }
-                                                onClick={onNavigate}
-                                            >
-                                                <Icon size={14} strokeWidth={1.5} aria-hidden />
-                                                {item.label}
-                                            </NavLink>
-                                        </li>
-                                    )
-                                })}
-                            </motion.ul>
-                        ) : null}
-                    </AnimatePresence>
-                </div>
+                {navGroups.map((group) => (
+                    <SidebarGroup key={group.id} group={group} onNavigate={onNavigate} />
+                ))}
             </nav>
 
             <div className="border-t border-royal/10 p-2">
                 <ProfileMenu />
             </div>
+        </div>
+    )
+}
+
+function SidebarGroup({ group, onNavigate }: { group: NavGroup; onNavigate?: () => void }) {
+    const location = useLocation()
+    const menuId = useId()
+    const GroupIcon = group.icon
+
+    const inGroup = location.pathname === group.base || location.pathname.startsWith(`${group.base}/`)
+    const [open, setOpen] = useState(inGroup)
+    const [wasInGroup, setWasInGroup] = useState(inGroup)
+    if (inGroup !== wasInGroup) {
+        setWasInGroup(inGroup)
+        if (inGroup) setOpen(true)
+    }
+
+    return (
+        <div className="mt-0.5">
+            <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={menuId}
+                onClick={() => setOpen((value) => !value)}
+                className={`${navLinkClass(false)} w-full ${inGroup ? 'text-gold-deep' : ''}`}
+            >
+                <GroupIcon size={15} strokeWidth={1.5} aria-hidden />
+                <span className="flex-1 text-left">{group.label}</span>
+                <ChevronDown
+                    size={14}
+                    strokeWidth={1.5}
+                    aria-hidden
+                    className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                />
+            </button>
+
+            <AnimatePresence initial={false}>
+                {open ? (
+                    <motion.ul
+                        id={menuId}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-4 overflow-hidden border-l border-royal/15 pl-1.5"
+                    >
+                        {group.pages.map((page) => {
+                            const Icon = page.icon
+                            const ready = isReady(page)
+                            return (
+                                <li key={page.path} className="py-px">
+                                    <NavLink
+                                        to={pagePath(group, page)}
+                                        title={ready ? undefined : `${page.label} (not ready yet)`}
+                                        className={({ isActive }) => `${navLinkClass(isActive, !ready)} text-sm`}
+                                        onClick={onNavigate}
+                                    >
+                                        <Icon size={14} strokeWidth={1.5} aria-hidden />
+                                        <span className="truncate">{page.label}</span>
+                                    </NavLink>
+                                </li>
+                            )
+                        })}
+                    </motion.ul>
+                ) : null}
+            </AnimatePresence>
         </div>
     )
 }
