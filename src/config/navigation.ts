@@ -36,6 +36,8 @@ import type { ComponentType } from 'react'
 import DestinationEditor from '../pages/cms/DestinationEditor'
 import Destinations from '../pages/cms/Destinations'
 import Faqs from '../pages/cms/Faqs'
+import MerchEditor from '../pages/cms/MerchEditor'
+import Shop from '../pages/cms/Shop'
 import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
 import VisaPageEditor from '../pages/cms/VisaPageEditor'
 import VisaPages from '../pages/cms/VisaPages'
@@ -320,11 +322,16 @@ export const navGroups: NavGroup[] = [
                 label: 'Shop',
                 path: 'shop',
                 icon: ShoppingBag,
-                wave: 'next',
+                wave: 'live',
                 summary: 'Merchandise already stored in the database and sold on the public shop.',
                 goals: [
                     'Add and edit products, prices, sizes, and gallery images',
                     'Mark items in or out of stock',
+                ],
+                element: Shop,
+                routes: [
+                    { path: 'new', element: MerchEditor },
+                    { path: ':slug', element: MerchEditor },
                 ],
             },
             {

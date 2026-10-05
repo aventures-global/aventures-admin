@@ -10,6 +10,7 @@ type EditorToolbarProps = {
     onSave: () => void
     onDiscard: () => void
     onDelete?: () => void
+    createLabel?: string
     /** Shows an Edit / Preview switch when provided. */
     mode?: 'edit' | 'preview'
     onModeChange?: (mode: 'edit' | 'preview') => void
@@ -24,6 +25,7 @@ export default function EditorToolbar({
     onSave,
     onDiscard,
     onDelete,
+    createLabel = 'Create destination',
     mode,
     onModeChange,
 }: EditorToolbarProps) {
@@ -110,7 +112,7 @@ export default function EditorToolbar({
                         className="btn-royal inline-flex items-center gap-1.5 rounded-[3px] px-3.5 py-1.5 text-xs disabled:pointer-events-none disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={13} className="animate-spin" aria-hidden /> : null}
-                        {isNew ? 'Create destination' : 'Save changes'}
+                        {isNew ? createLabel : 'Save changes'}
                     </button>
                 </div>
             </div>
