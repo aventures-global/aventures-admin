@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Eye, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 type EditorToolbarProps = {
@@ -10,6 +10,9 @@ type EditorToolbarProps = {
     onSave: () => void
     onDiscard: () => void
     onDelete?: () => void
+    /** Shows an Edit / Preview switch when provided. */
+    mode?: 'edit' | 'preview'
+    onModeChange?: (mode: 'edit' | 'preview') => void
 }
 
 export default function EditorToolbar({
@@ -21,6 +24,8 @@ export default function EditorToolbar({
     onSave,
     onDiscard,
     onDelete,
+    mode,
+    onModeChange,
 }: EditorToolbarProps) {
     const status = saving
         ? 'Saving…'
@@ -53,6 +58,32 @@ export default function EditorToolbar({
                 </span>
 
                 <div className="ml-auto flex flex-wrap items-center gap-2">
+                    {mode && onModeChange ? (
+                        <div
+                            role="group"
+                            aria-label="Editor mode"
+                            className="mr-1 inline-flex items-center rounded-[3px] border border-royal/25 bg-white/60 p-0.5"
+                        >
+                            {(['edit', 'preview'] as const).map((value) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    aria-pressed={mode === value}
+                                    onClick={() => onModeChange(value)}
+                                    className={`inline-flex items-center gap-1.5 rounded-[2px] px-2.5 py-1 text-xs transition ${
+                                        mode === value ? 'bg-royal text-cream' : 'text-ink/60 hover:text-royal'
+                                    }`}
+                                >
+                                    {value === 'edit' ? (
+                                        <Pencil size={12} strokeWidth={1.75} aria-hidden />
+                                    ) : (
+                                        <Eye size={12} strokeWidth={1.75} aria-hidden />
+                                    )}
+                                    {value === 'edit' ? 'Edit' : 'Preview'}
+                                </button>
+                            ))}
+                        </div>
+                    ) : null}
                     {onDelete ? (
                         <button
                             type="button"

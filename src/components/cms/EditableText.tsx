@@ -16,6 +16,8 @@ type EditableTextProps = {
     /** Start in edit mode, e.g. for a freshly added list item. */
     autoEdit?: boolean
     onEditEnd?: (value: string) => void
+    /** Render as plain text, e.g. in a preview of the draft. */
+    readOnly?: boolean
 }
 
 const idleRing =
@@ -33,9 +35,14 @@ export default function EditableText({
     invalid = false,
     autoEdit = false,
     onEditEnd,
+    readOnly = false,
 }: EditableTextProps) {
     const [editing, setEditing] = useState(autoEdit)
     const initialRef = useRef(value)
+
+    if (readOnly) {
+        return <Tag className={`${className} ${multiline ? 'whitespace-pre-line' : ''}`}>{value}</Tag>
+    }
 
     const start = () => {
         initialRef.current = value

@@ -18,7 +18,7 @@ export const REGION_OPTIONS: { id: TourRegion; label: string }[] = [
     { id: 'philippines', label: 'Philippines' },
     { id: 'east-asia', label: 'East Asia' },
     { id: 'southeast-asia', label: 'Southeast Asia' },
-    { id: 'americas', label: 'Americas' },
+    { id: 'americas', label: 'USA' },
     { id: 'europe', label: 'Europe' },
     { id: 'other', label: 'Other' },
 ]
@@ -56,8 +56,13 @@ export type TourSearchParams = {
     dir: 'asc' | 'desc'
 }
 
+export type TourSummary = Pick<
+    Tour,
+    'id' | 'slug' | 'title' | 'tagline' | 'coverImage' | 'location' | 'featured' | 'region' | 'sortOrder' | 'updatedAt'
+>
+
 export type TourSearchPage = {
-    items: Tour[]
+    items: TourSummary[]
     nextCursor: number | null
     total: number
 }

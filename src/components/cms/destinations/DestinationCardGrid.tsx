@@ -21,11 +21,11 @@ import { useRef, useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { moveItem } from '../../../lib/listOps'
 import type { TourMove } from '../../../services/tourService'
-import type { Tour } from '../../../types/tour'
+import type { TourSummary } from '../../../types/tour'
 import DestinationCard from './DestinationCard'
 
 type DestinationCardGridProps = {
-    tours: Tour[]
+    tours: TourSummary[]
     sortable: boolean
     onMove: (move: { slug: string; from: number; to: number; move: TourMove }) => void
 }
@@ -120,7 +120,7 @@ function SortableCard({
     sortable,
     onClickCapture,
 }: {
-    tour: Tour
+    tour: TourSummary
     sortable: boolean
     onClickCapture: (event: MouseEvent) => void
 }) {

@@ -36,6 +36,9 @@ import type { ComponentType } from 'react'
 import DestinationEditor from '../pages/cms/DestinationEditor'
 import Destinations from '../pages/cms/Destinations'
 import Faqs from '../pages/cms/Faqs'
+import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
+import VisaPageEditor from '../pages/cms/VisaPageEditor'
+import VisaPages from '../pages/cms/VisaPages'
 
 export type NavItem = {
     label: string
@@ -300,12 +303,17 @@ export const navGroups: NavGroup[] = [
                 label: 'Visa pages',
                 path: 'visa-services',
                 icon: Stamp,
-                wave: 'next',
+                wave: 'live',
                 summary: 'The public visa service pages and the visa finder.',
                 goals: [
                     'Edit each visa service page and its preparation checklist',
                     'Update visa finder questions and outcomes',
                     'Keep internal-only requirements out of public copy',
+                ],
+                element: VisaPages,
+                routes: [
+                    { path: 'finder', element: VisaFinderEditor },
+                    { path: ':slug', element: VisaPageEditor },
                 ],
             },
             {

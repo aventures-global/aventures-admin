@@ -1,10 +1,10 @@
 import { ArrowUpRight, Star } from 'lucide-react'
 import { cardCoverFocus } from '../../../lib/coverFocus'
-import { regionLabel, type Tour } from '../../../types/tour'
+import { regionLabel, type TourSummary } from '../../../types/tour'
 import SafeImage from '../../ui/SafeImage'
 
 type DestinationCardProps = {
-    tour: Tour
+    tour: TourSummary
     lifted?: boolean
 }
 

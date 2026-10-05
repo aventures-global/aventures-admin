@@ -1,11 +1,11 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cardCoverFocus } from '../../../lib/coverFocus'
-import { regionLabel, type Tour, type TourSearchParams, type TourSort } from '../../../types/tour'
+import { regionLabel, type TourSearchParams, type TourSort, type TourSummary } from '../../../types/tour'
 import SafeImage from '../../ui/SafeImage'
 
 type DestinationTableProps = {
-    tours: Tour[]
+    tours: TourSummary[]
     sort: TourSearchParams['sort']
     dir: TourSearchParams['dir']
     onSort: (sort: TourSort) => void
