@@ -38,6 +38,7 @@ import Destinations from '../pages/cms/Destinations'
 import Faqs from '../pages/cms/Faqs'
 import MerchEditor from '../pages/cms/MerchEditor'
 import Shop from '../pages/cms/Shop'
+import Testimonials from '../pages/cms/Testimonials'
 import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
 import VisaPageEditor from '../pages/cms/VisaPageEditor'
 import VisaPages from '../pages/cms/VisaPages'
@@ -338,9 +339,10 @@ export const navGroups: NavGroup[] = [
                 label: 'Testimonials',
                 path: 'testimonials',
                 icon: Quote,
-                wave: 'next',
-                summary: 'Customer quotes shown on the homepage.',
+                wave: 'live',
+                summary: 'Customer quotes shown on the homepage and destination pages.',
                 goals: ['Add, edit, and reorder testimonials', 'Set the star rating and trip name'],
+                element: Testimonials,
             },
             {
                 label: 'Partners',
