@@ -38,6 +38,8 @@ import Destinations from '../pages/cms/Destinations'
 import Faqs from '../pages/cms/Faqs'
 import MerchEditor from '../pages/cms/MerchEditor'
 import Shop from '../pages/cms/Shop'
+import SitePageEditor from '../pages/cms/SitePageEditor'
+import SitePages from '../pages/cms/SitePages'
 import Testimonials from '../pages/cms/Testimonials'
 import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
 import VisaPageEditor from '../pages/cms/VisaPageEditor'
@@ -376,9 +378,11 @@ export const navGroups: NavGroup[] = [
                 label: 'Site pages',
                 path: 'site-pages',
                 icon: LayoutTemplate,
-                wave: 'later',
+                wave: 'live',
                 summary: 'Homepage, About, Why us, Privacy, and Terms copy.',
                 goals: ['Edit page copy without a code change', 'Preview before publishing'],
+                element: SitePages,
+                routes: [{ path: ':id', element: SitePageEditor }],
             },
         ],
     },
