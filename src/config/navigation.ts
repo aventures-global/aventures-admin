@@ -37,6 +37,7 @@ import DestinationEditor from '../pages/cms/DestinationEditor'
 import Destinations from '../pages/cms/Destinations'
 import Faqs from '../pages/cms/Faqs'
 import MerchEditor from '../pages/cms/MerchEditor'
+import Partners from '../pages/cms/Partners'
 import Shop from '../pages/cms/Shop'
 import SitePageEditor from '../pages/cms/SitePageEditor'
 import SitePages from '../pages/cms/SitePages'
@@ -350,9 +351,10 @@ export const navGroups: NavGroup[] = [
                 label: 'Partners',
                 path: 'partners',
                 icon: Handshake,
-                wave: 'next',
-                summary: 'Partner logos shown on the homepage.',
-                goals: ['Upload logos and set their order'],
+                wave: 'live',
+                summary: 'Partner businesses shown in the Trusted Partners section of the homepage.',
+                goals: ['Add and edit partners, with their website and description', 'Upload logos and set their order'],
+                element: Partners,
             },
             {
                 label: 'Offers',
