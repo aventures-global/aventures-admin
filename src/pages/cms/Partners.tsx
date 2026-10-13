@@ -86,7 +86,7 @@ export default function Partners() {
             <PageHeader
                 eyebrow="CMS"
                 title="Partners"
-                description="Partner businesses shown in the Trusted Partners section of the homepage."
+                description="Partner businesses shown in the Trusted Partners section of the homepage and on the Partners page. The first three appear first on the homepage; with more than three, the rest scroll in a carousel."
             />
 
             <div className="mt-6 max-w-3xl space-y-4">
