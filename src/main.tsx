@@ -3,8 +3,11 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from 'react-router-dom'
 import { AuthProvider } from './lib/auth.tsx'
+import { applyPreferences, storedPreferences } from './lib/appearance.ts'
 import './index.css'
 import { router } from './router.tsx'
+
+applyPreferences(storedPreferences())
 
 const queryClient = new QueryClient({
     defaultOptions: {

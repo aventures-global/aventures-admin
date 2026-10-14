@@ -1,11 +1,13 @@
-import { ChevronDown, ChevronsUpDown, LogOut } from 'lucide-react'
+import { ChevronDown, ChevronsUpDown, LogOut, Settings } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { dashboardItem, isReady, navGroups, pagePath, type NavGroup } from '../../config/navigation'
+import { SETTINGS_BASE } from '../../config/settings'
 import { useAuth } from '../../lib/authContext'
 import BrandWordmark from '../BrandWordmark'
 import { ROLE_LABELS } from '../../lib/roles'
+import SettingsNav from './SettingsNav'
 
 function navLinkClass(active: boolean, muted = false) {
     return `flex min-h-9 items-center gap-2.5 rounded-[3px] px-2.5 font-noto-serif text-[15px] tracking-wide transition-colors ${
@@ -24,6 +26,8 @@ function initialsFromName(name?: string) {
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     const DashboardIcon = dashboardItem.icon
+    const { pathname } = useLocation()
+    const inSettings = pathname === SETTINGS_BASE || pathname.startsWith(`${SETTINGS_BASE}/`)
 
     return (
         <div className="flex h-full flex-col">
@@ -33,24 +37,30 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </Link>
             </div>
 
-            <nav aria-label="Main" className="no-scrollbar flex-1 overflow-y-auto px-2">
-                <NavLink
-                    to={dashboardItem.to}
-                    end
-                    className={({ isActive }) => navLinkClass(isActive)}
-                    onClick={onNavigate}
-                >
-                    <DashboardIcon size={15} strokeWidth={1.5} aria-hidden />
-                    {dashboardItem.label}
-                </NavLink>
+            {inSettings ? (
+                <nav aria-label="Settings" className="no-scrollbar flex-1 overflow-y-auto px-2">
+                    <SettingsNav onNavigate={onNavigate} linkClass={navLinkClass} />
+                </nav>
+            ) : (
+                <nav aria-label="Main" className="no-scrollbar flex-1 overflow-y-auto px-2">
+                    <NavLink
+                        to={dashboardItem.to}
+                        end
+                        className={({ isActive }) => navLinkClass(isActive)}
+                        onClick={onNavigate}
+                    >
+                        <DashboardIcon size={15} strokeWidth={1.5} aria-hidden />
+                        {dashboardItem.label}
+                    </NavLink>
 
-                {navGroups.map((group) => (
-                    <SidebarGroup key={group.id} group={group} onNavigate={onNavigate} />
-                ))}
-            </nav>
+                    {navGroups.map((group) => (
+                        <SidebarGroup key={group.id} group={group} onNavigate={onNavigate} />
+                    ))}
+                </nav>
+            )}
 
             <div className="border-t border-royal/10 p-2">
-                <ProfileMenu />
+                <ProfileMenu onNavigate={onNavigate} />
             </div>
         </div>
     )
@@ -122,7 +132,7 @@ function SidebarGroup({ group, onNavigate }: { group: NavGroup; onNavigate?: () 
     )
 }
 
-function ProfileMenu() {
+function ProfileMenu({ onNavigate }: { onNavigate?: () => void }) {
     const { appUser, displayName, logout } = useAuth()
     const navigate = useNavigate()
     const [open, setOpen] = useState(false)
@@ -176,6 +186,18 @@ function ProfileMenu() {
                                 <p className="mt-0.5 truncate text-xs text-ink/55">{appUser.email}</p>
                             ) : null}
                         </div>
+                        <Link
+                            to={SETTINGS_BASE}
+                            role="menuitem"
+                            onClick={() => {
+                                setOpen(false)
+                                onNavigate?.()
+                            }}
+                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm text-ink/80 transition hover:bg-royal/5 hover:text-royal"
+                        >
+                            <Settings size={15} strokeWidth={1.5} aria-hidden />
+                            Settings
+                        </Link>
                         <button
                             type="button"
                             role="menuitem"

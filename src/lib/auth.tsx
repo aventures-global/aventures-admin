@@ -1,6 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { setAccessToken, setTokenRefresher } from '../services/api'
-import { bootstrapUser, type AppUser, type AppUserRole } from '../services/userService'
+import { clearStoredPreferences } from './appearance'
+import { bootstrapUser, type AppUser, type AppUserRole, type Capability } from '../services/userService'
 import { AuthContext, type AuthContextValue, type SessionStatus } from './authContext'
 import {
     getAccessToken,
@@ -18,7 +20,9 @@ const ACCESS_DENIED_MESSAGE =
     'This account does not have admin access yet. Ask the super admin to grant your account staff or admin access.'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const queryClient = useQueryClient()
     const [appUser, setAppUser] = useState<AppUser | null>(null)
+    const [permissions, setPermissions] = useState<Capability[]>([])
     const [neonName, setNeonName] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -27,6 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const clearLocal = useCallback(() => {
         setAccessToken(null)
         setAppUser(null)
+        setPermissions([])
         setNeonName('')
     }, [])
 
@@ -48,12 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setAccessToken(accessToken)
         let synced: AppUser
+        let capabilities: Capability[]
         try {
-            synced = await bootstrapUser({
+            ;({ user: synced, permissions: capabilities } = await bootstrapUser({
                 name: sessionUser.name,
                 email: sessionUser.email,
                 image: sessionUser.image,
-            })
+            }))
         } catch (err) {
             clearLocal()
             throw err
@@ -68,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setNeonName(sessionUser.name?.trim() || sessionUser.email)
         setAppUser(synced)
+        setPermissions(capabilities)
         return 'allowed'
     }, [clearLocal])
 
@@ -119,7 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(null)
         await signOut()
         clearLocal()
-    }, [clearLocal])
+        clearStoredPreferences()
+        queryClient.clear()
+    }, [clearLocal, queryClient])
 
     const value = useMemo<AuthContextValue>(() => {
         const fullName = appUser
@@ -137,8 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             loginWithGoogle,
             logout,
             refresh,
+            can: (capability) => permissions.includes(capability),
         }
-    }, [appUser, neonName, isLoading, error, otp, login, loginWithGoogle, logout, refresh])
+    }, [appUser, permissions, neonName, isLoading, error, otp, login, loginWithGoogle, logout, refresh])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -1,13 +1,11 @@
 import { Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import PageHeader from '../../components/PageHeader'
-import RoleBadge from '../../components/settings/RoleBadge'
 import { useAdminUsers } from '../../hooks/useAdminUsers'
 import { ghostActionClass, selectClass } from '../../lib/formStyles'
 import { ROLE_LABELS } from '../../lib/roles'
-import type { AdminUserListParams } from '../../services/adminUserService'
-import type { AppUserRole } from '../../services/userService'
+import type { AdminUserListParams, UserScope } from '../../services/adminUserService'
+import type { AppUser, AppUserRole } from '../../services/userService'
+import RoleBadge from './RoleBadge'
 
 const PAGE_SIZE = 25
 
@@ -18,11 +16,20 @@ const SORT_OPTIONS: { id: string; label: string; sort: AdminUserListParams['sort
     { id: 'role', label: 'Highest role first', sort: 'role', dir: 'desc' },
 ]
 
-export default function StaffAccess() {
-    const navigate = useNavigate()
+type UserDirectoryProps = {
+    scope: UserScope
+    /** Role filter choices; omit to hide the filter. */
+    roles?: AppUserRole[]
+    emptyTitle: string
+    emptyBody: string
+    onSelect: (user: AppUser) => void
+}
+
+export default function UserDirectory({ scope, roles, emptyTitle, emptyBody, onSelect }: UserDirectoryProps) {
     const [query, setQuery] = useState('')
     const [params, setParams] = useState<AdminUserListParams>({
         q: '',
+        scope,
         role: 'all',
         sort: 'createdAt',
         dir: 'desc',
@@ -42,13 +49,7 @@ export default function StaffAccess() {
 
     return (
         <div>
-            <PageHeader
-                eyebrow="Settings"
-                title="Staff & access"
-                description="Every account that has signed in to the website or this admin site. Only the super admin can change roles."
-            />
-
-            <div className="mt-6 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-[14rem] flex-1">
                     <Search
                         size={15}
@@ -76,21 +77,27 @@ export default function StaffAccess() {
                         </button>
                     ) : null}
                 </div>
-                <select
-                    aria-label="Role"
-                    value={params.role}
-                    onChange={(event) =>
-                        setParams((prev) => ({ ...prev, role: event.target.value as AdminUserListParams['role'], page: 1 }))
-                    }
-                    className={`${selectClass} px-3`}
-                >
-                    <option value="all">All roles</option>
-                    {(Object.keys(ROLE_LABELS) as AppUserRole[]).map((role) => (
-                        <option key={role} value={role}>
-                            {ROLE_LABELS[role]}
-                        </option>
-                    ))}
-                </select>
+                {roles ? (
+                    <select
+                        aria-label="Role"
+                        value={params.role}
+                        onChange={(event) =>
+                            setParams((prev) => ({
+                                ...prev,
+                                role: event.target.value as AdminUserListParams['role'],
+                                page: 1,
+                            }))
+                        }
+                        className={`${selectClass} px-3`}
+                    >
+                        <option value="all">All roles</option>
+                        {roles.map((role) => (
+                            <option key={role} value={role}>
+                                {ROLE_LABELS[role]}
+                            </option>
+                        ))}
+                    </select>
+                ) : null}
                 <select
                     aria-label="Sort"
                     value={sortId}
@@ -128,10 +135,8 @@ export default function StaffAccess() {
                     </div>
                 ) : data.items.length === 0 ? (
                     <div className="rounded-[3px] border border-royal/15 px-6 py-16 text-center">
-                        <p className="font-noto-serif text-2xl text-ink">No users found</p>
-                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
-                            People appear here after they sign in for the first time.
-                        </p>
+                        <p className="font-noto-serif text-2xl text-ink">{emptyTitle}</p>
+                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">{emptyBody}</p>
                     </div>
                 ) : (
                     <>
@@ -154,9 +159,9 @@ export default function StaffAccess() {
                                             <tr
                                                 key={user.id}
                                                 tabIndex={0}
-                                                onClick={() => navigate(user.id)}
+                                                onClick={() => onSelect(user)}
                                                 onKeyDown={(event) => {
-                                                    if (event.key === 'Enter') navigate(user.id)
+                                                    if (event.key === 'Enter') onSelect(user)
                                                 }}
                                                 className="cursor-pointer transition-colors hover:bg-royal/[0.03] focus-visible:bg-royal/[0.05] focus-visible:outline-none"
                                             >

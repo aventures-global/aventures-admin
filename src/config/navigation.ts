@@ -1,5 +1,4 @@
 import {
-    Activity,
     Bell,
     Bookmark,
     BookOpen,
@@ -11,7 +10,6 @@ import {
     FileText,
     FolderOpen,
     Handshake,
-    Images,
     Inbox,
     Layers,
     LayoutDashboard,
@@ -22,12 +20,10 @@ import {
     MessagesSquare,
     Quote,
     Route,
-    Settings,
     ShoppingBag,
     Stamp,
     Store,
     Tag,
-    UserCog,
     Users,
     Wallet,
     type LucideIcon,
@@ -45,8 +41,8 @@ import Testimonials from '../pages/cms/Testimonials'
 import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
 import VisaPageEditor from '../pages/cms/VisaPageEditor'
 import VisaPages from '../pages/cms/VisaPages'
-import StaffAccess from '../pages/settings/StaffAccess'
-import UserDetail from '../pages/settings/UserDetail'
+import CustomerDetail from '../pages/clients/CustomerDetail'
+import Customers from '../pages/clients/Customers'
 
 export type NavItem = {
     label: string
@@ -119,15 +115,15 @@ export const navGroups: NavGroup[] = [
                 label: 'Customers',
                 path: 'customers',
                 icon: Contact,
-                wave: 'next',
+                wave: 'live',
                 summary: 'The CRM: every lead and customer, with their history in one profile.',
                 goals: [
-                    'Customer profiles with contact details and travel preferences',
-                    'Lead status from New through Contacted, Consultation, Quotation, Follow-up, and Converted or Closed',
-                    'Assign leads to staff and keep internal notes',
-                    'Inquiry and interaction history',
-                    'Search, filter, segment, and export records',
+                    'Search customer accounts and edit their contact details',
+                    'Activity history on every customer profile',
+                    'Lead status, staff assignment, internal notes, and exports later',
                 ],
+                element: Customers,
+                routes: [{ path: ':id', element: CustomerDetail }],
             },
             {
                 label: 'Follow-ups',
@@ -428,52 +424,6 @@ export const navGroups: NavGroup[] = [
                 wave: 'suggested',
                 summary: 'Consultations, follow-ups, and travel dates in one view.',
                 goals: ['Month and week views per staff member', 'Upcoming departures and visa appointments'],
-            },
-        ],
-    },
-    {
-        id: 'settings',
-        label: 'Settings',
-        base: '/settings',
-        icon: Settings,
-        pages: [
-            {
-                label: 'Staff & access',
-                path: 'staff',
-                icon: UserCog,
-                wave: 'live',
-                summary: 'Find user accounts and manage customer, staff, and admin roles.',
-                goals: [
-                    'Search and inspect user accounts',
-                    'Promote and demote staff and admins',
-                    'Invite staff accounts and fine-grained permissions later',
-                ],
-                element: StaffAccess,
-                routes: [{ path: ':id', element: UserDetail }],
-            },
-            {
-                label: 'Site settings',
-                path: 'site',
-                icon: Settings,
-                wave: 'later',
-                summary: 'Contact details, address, and social links shown across the site.',
-                goals: ['Edit phone, email, and address', 'Update social media links'],
-            },
-            {
-                label: 'Media library',
-                path: 'media',
-                icon: Images,
-                wave: 'suggested',
-                summary: 'One place for every image uploaded for destinations and products.',
-                goals: ['Browse, search, and reuse uploads', 'Remove unused images'],
-            },
-            {
-                label: 'Activity log',
-                path: 'activity',
-                icon: Activity,
-                wave: 'suggested',
-                summary: 'Who changed a quote, a visa status, or a published page, and when.',
-                goals: ['Filter by staff member, record, and date'],
             },
         ],
     },

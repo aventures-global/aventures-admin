@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { AppUser } from '../services/userService'
+import type { AppUser, Capability } from '../services/userService'
 
 export type SessionStatus = 'signed-out' | 'allowed' | 'denied'
 
@@ -15,6 +15,7 @@ export type AuthContextValue = {
     loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     refresh: () => Promise<SessionStatus>
+    can: (capability: Capability) => boolean
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

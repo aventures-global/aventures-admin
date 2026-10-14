@@ -63,6 +63,7 @@
   :root {
     /* Brand gradient stop list, reused at different angles. */
     --gold-stops: #ffd700 0%, #ffc300 25%, #ffb000 50%, #ffd700 75%, #fff1b8 100%;
+    --admin-font: "Poppins", system-ui, sans-serif;
   }
 
   body {
@@ -70,7 +71,7 @@
     min-height: 100svh;
     background-color: var(--color-oat);
     color: var(--color-ink);
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: var(--admin-font);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -104,7 +105,7 @@
   }
 
   .font-poppins {
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: var(--admin-font);
   }
 
   /* Admin chrome, matching the cream pages of the public site. */
@@ -126,7 +127,7 @@
     border: 2px solid var(--color-royal);
     background-color: var(--color-royal);
     color: var(--color-cream);
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: var(--admin-font);
     font-weight: 500;
     transition:
       background-color 0.3s ease,
@@ -188,6 +189,126 @@
     background-size: 200% 100%;
     animation: shimmer 1.4s ease-in-out infinite;
   }
+}
+
+/* Dark admin theme: swaps the palette tokens so existing utilities (text-ink, bg-cream, ...) follow. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #ece7dc;
+  --color-cream: #161b24;
+  --color-oat: #0f131a;
+  --color-royal: #9db8e6;
+}
+
+:root[data-theme="dark"] .luxury-paper {
+  background-image:
+    radial-gradient(ellipse at 15% 0%, rgba(157, 184, 230, 0.06), transparent 60%),
+    radial-gradient(ellipse at 90% 100%, rgba(255, 176, 0, 0.03), transparent 55%);
+}
+
+:root[data-theme="dark"] .paper-card {
+  background-color: rgba(28, 34, 45, 0.85);
+  box-shadow: none;
+}
+
+:root[data-theme="dark"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: #1c222d;
+}
+
+:root[data-theme="dark"] .btn-royal {
+  color: #0f131a;
+}
+
+/* Accent colors. Each tone is tuned for contrast against cream (light) and slate (dark) surfaces. */
+:root[data-accent="emerald"] {
+  --color-royal: #1f5f4a;
+}
+
+:root[data-accent="burgundy"] {
+  --color-royal: #6b1f33;
+}
+
+:root[data-accent="slate"] {
+  --color-royal: #334155;
+}
+
+:root[data-accent="gold"] {
+  --color-royal: #85600a;
+}
+
+:root[data-theme="dark"][data-accent="emerald"] {
+  --color-royal: #8fd1b5;
+}
+
+:root[data-theme="dark"][data-accent="burgundy"] {
+  --color-royal: #e3a1b1;
+}
+
+:root[data-theme="dark"][data-accent="slate"] {
+  --color-royal: #b6c2d3;
+}
+
+:root[data-theme="dark"][data-accent="gold"] {
+  --color-royal: #f0c75e;
+}
+
+/* Font face. */
+:root[data-font="inter"] {
+  --admin-font: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+:root[data-font="system"] {
+  --admin-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+:root[data-font="serif"] {
+  --admin-font: "Noto Serif", Georgia, serif;
+}
+
+/* Text size scales every rem-based utility. */
+:root[data-text-size="small"] {
+  font-size: 14px;
+}
+
+:root[data-text-size="large"] {
+  font-size: 18px;
+}
+
+/* Compact density tightens tables, cards, and form controls. */
+:root[data-density="compact"] :is(td, th) {
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+}
+
+:root[data-density="compact"] .paper-card:is(.p-5, .p-6) {
+  padding: 0.875rem;
+}
+
+:root[data-density="compact"] :is(input:not([type="checkbox"]):not([type="radio"]), textarea) {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+:root[data-density="compact"] :is(select, input).h-9 {
+  height: 2rem;
+}
+
+:root[data-density="compact"] .min-h-9 {
+  min-height: 1.875rem;
+}
+
+/* Explicit reduced motion, independent of the OS setting. */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+:root[data-motion="reduce"] :is(.skeleton-shimmer, .skeleton-paper) {
+  animation: none !important;
 }
 
 @keyframes shimmer {

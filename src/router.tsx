@@ -1,7 +1,10 @@
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router-dom'
 import AdminLayout from './components/layout/AdminLayout'
 import { PublicOnly, RequireStaff } from './components/RouteGuards'
+import SettingsGuard from './components/settings/SettingsGuard'
 import { navGroups, pagePath } from './config/navigation'
+import { SETTINGS_BASE, settingsTabPath, settingsTabs } from './config/settings'
+import AcceptInvite from './pages/AcceptInvite'
 import Dashboard from './pages/Dashboard'
 import ForgotPassword from './pages/ForgotPassword'
 import Login from './pages/Login'
@@ -31,6 +34,37 @@ const groupRoutes: RouteObject[] = navGroups.map((group) => ({
     ],
 }))
 
+const settingsRoute: RouteObject = {
+    path: SETTINGS_BASE,
+    children: [
+        { index: true, element: <Navigate to={settingsTabPath(settingsTabs[0])} replace /> },
+        ...settingsTabs.map((tab) => {
+            const Page = tab.element
+            return {
+                path: tab.path,
+                children: [
+                    {
+                        index: true,
+                        element: (
+                            <SettingsGuard tab={tab}>
+                                <Page />
+                            </SettingsGuard>
+                        ),
+                    },
+                    ...(tab.routes ?? []).map(({ path, element: Child }) => ({
+                        path,
+                        element: (
+                            <SettingsGuard tab={tab}>
+                                <Child />
+                            </SettingsGuard>
+                        ),
+                    })),
+                ],
+            }
+        }),
+    ],
+}
+
 const publicPages = [
     { path: '/login', Page: Login },
     { path: '/signup', Page: Signup },
@@ -47,8 +81,9 @@ export const router = createBrowserRouter([
                 <AdminLayout />
             </RequireStaff>
         ),
-        children: [{ index: true, element: <Dashboard /> }, ...groupRoutes],
+        children: [{ index: true, element: <Dashboard /> }, ...groupRoutes, settingsRoute],
     },
+    { path: '/accept-invite', element: <AcceptInvite /> },
     ...publicPages.map(({ path, Page }) => ({
         path,
         element: (
