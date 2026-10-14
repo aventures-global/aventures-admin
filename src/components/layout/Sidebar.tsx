@@ -5,6 +5,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { dashboardItem, isReady, navGroups, pagePath, type NavGroup } from '../../config/navigation'
 import { useAuth } from '../../lib/authContext'
 import BrandWordmark from '../BrandWordmark'
+import { ROLE_LABELS } from '../../lib/roles'
 
 function navLinkClass(active: boolean, muted = false) {
     return `flex min-h-9 items-center gap-2.5 rounded-[3px] px-2.5 font-noto-serif text-[15px] tracking-wide transition-colors ${
@@ -207,7 +208,7 @@ function ProfileMenu() {
                 <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-medium text-ink">{displayName}</span>
                     {appUser ? (
-                        <span className="block truncate text-[11px] text-ink/55">{appUser.role}</span>
+                        <span className="block truncate text-[11px] text-ink/55">{ROLE_LABELS[appUser.role]}</span>
                     ) : null}
                 </span>
                 <ChevronsUpDown size={14} strokeWidth={1.5} aria-hidden className="text-ink/45" />

@@ -1,6 +1,6 @@
 import { api } from './api'
 
-export type AppUserRole = 'CUSTOMER' | 'STAFF' | 'ADMIN'
+export type AppUserRole = 'CUSTOMER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN'
 
 export type AppUser = {
     id: string

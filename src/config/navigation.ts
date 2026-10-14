@@ -45,6 +45,8 @@ import Testimonials from '../pages/cms/Testimonials'
 import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
 import VisaPageEditor from '../pages/cms/VisaPageEditor'
 import VisaPages from '../pages/cms/VisaPages'
+import StaffAccess from '../pages/settings/StaffAccess'
+import UserDetail from '../pages/settings/UserDetail'
 
 export type NavItem = {
     label: string
@@ -439,13 +441,15 @@ export const navGroups: NavGroup[] = [
                 label: 'Staff & access',
                 path: 'staff',
                 icon: UserCog,
-                wave: 'next',
-                summary: 'Invite staff and manage customer, staff, and admin roles.',
+                wave: 'live',
+                summary: 'Find user accounts and manage customer, staff, and admin roles.',
                 goals: [
-                    'Invite staff accounts',
-                    'Change roles and permissions',
-                    'Deactivate accounts that no longer need access',
+                    'Search and inspect user accounts',
+                    'Promote and demote staff and admins',
+                    'Invite staff accounts and fine-grained permissions later',
                 ],
+                element: StaffAccess,
+                routes: [{ path: ':id', element: UserDetail }],
             },
             {
                 label: 'Site settings',

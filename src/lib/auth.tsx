@@ -8,23 +8,14 @@ import {
     signInEmail,
     signInWithGoogle,
     signOut,
-    signUpEmail,
 } from './authApi'
 
-const ALLOWED_ROLES: AppUserRole[] = ['STAFF', 'ADMIN']
+const ALLOWED_ROLES: AppUserRole[] = ['STAFF', 'ADMIN', 'SUPER_ADMIN']
 
 setTokenRefresher(getAccessToken)
 
 const ACCESS_DENIED_MESSAGE =
-    'This account does not have admin access. Ask an administrator to grant you the STAFF or ADMIN role.'
-
-function isNeonAdmin(role: unknown): boolean {
-    if (typeof role !== 'string') return false
-    return role
-        .split(',')
-        .map((value) => value.trim().toLowerCase())
-        .includes('admin')
-}
+    'This account does not have admin access yet. Ask the super admin to grant your account staff or admin access.'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [appUser, setAppUser] = useState<AppUser | null>(null)
@@ -68,8 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             throw err
         }
 
-        const neonRole = (sessionUser as { role?: unknown }).role
-        if (!ALLOWED_ROLES.includes(synced.role) && !isNeonAdmin(neonRole)) {
+        if (!ALLOWED_ROLES.includes(synced.role)) {
             await signOut()
             clearLocal()
             setError(ACCESS_DENIED_MESSAGE)
@@ -120,15 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [applySession],
     )
 
-    const signup = useCallback(
-        async (input: { name: string; email: string; password: string }) => {
-            setError(null)
-            await signUpEmail(input)
-            return applySession()
-        },
-        [applySession],
-    )
-
     const loginWithGoogle = useCallback(async () => {
         setError(null)
         await signInWithGoogle()
@@ -153,12 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             otp,
             setVerificationCode: setOtp,
             login,
-            signup,
             loginWithGoogle,
             logout,
             refresh,
         }
-    }, [appUser, neonName, isLoading, error, otp, login, signup, loginWithGoogle, logout, refresh])
+    }, [appUser, neonName, isLoading, error, otp, login, loginWithGoogle, logout, refresh])
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

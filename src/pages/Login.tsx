@@ -107,9 +107,9 @@ export default function Login() {
                 </Link>
             </p>
             <p className="mt-2 text-center text-sm text-ink/60">
-                No account yet?{' '}
-                <Link to={`/signup?next=${encodeURIComponent(next)}`} className={linkClass}>
-                    Create one
+                Need access?{' '}
+                <Link to="/signup" className={linkClass}>
+                    How to get an admin account
                 </Link>
             </p>
         </AuthLayout>

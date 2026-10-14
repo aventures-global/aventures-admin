@@ -12,7 +12,6 @@ export type AuthContextValue = {
     otp: string | null
     setVerificationCode: (otp: string | null) => void
     login: (input: { email: string; password: string }) => Promise<void>
-    signup: (input: { name: string; email: string; password: string }) => Promise<SessionStatus>
     loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     refresh: () => Promise<SessionStatus>
