@@ -15,6 +15,15 @@ const CAPABILITY_INFO: Record<Capability, { label: string; description: string }
     'clients.edit': { label: 'Edit customer profiles', description: 'Names and phone numbers on customer accounts.' },
     'team.view': { label: 'View team & access', description: 'Team members, invitations, and this permission list.' },
     'business.edit': { label: 'Edit business settings', description: 'Public contact details and social links.' },
+    'documents.view': { label: 'View documents', description: 'Browse and download customer and company files.' },
+    'documents.manage': { label: 'Manage documents', description: 'Upload, organize, update status, and delete files.' },
+    'documents.share': { label: 'Share documents', description: 'Create and revoke time-limited download links.' },
+    'quotations.view': { label: 'View quotations', description: 'Browse customer quotations and download PDFs.' },
+    'quotations.manage': {
+        label: 'Manage quotations',
+        description: 'Create, edit, send, convert, and delete quotations.',
+    },
+    'quotations.share': { label: 'Share quotations', description: 'Create and revoke customer quote links.' },
 }
 
 const ROLES: { role: ConfigurableRole; label: string }[] = [

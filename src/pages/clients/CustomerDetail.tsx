@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, FileText, FolderOpen } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import Notice from '../../components/cms/faqs/Notice'
 import PageHeader from '../../components/PageHeader'
@@ -8,6 +8,7 @@ import UserProfileForm from '../../components/settings/UserProfileForm'
 import { useAdminUser, useUpdateAdminUser } from '../../hooks/useAdminUsers'
 import { useNotice } from '../../hooks/useNotice'
 import { useAuth } from '../../lib/authContext'
+import { ghostActionClass } from '../../lib/formStyles'
 import type { AppUser } from '../../services/userService'
 
 export default function CustomerDetail() {
@@ -54,6 +55,8 @@ function CustomerContent({ user }: { user: AppUser }) {
     const updateUser = useUpdateAdminUser()
     const name = [user.firstName, user.lastName].filter(Boolean).join(' ')
     const canEdit = can('clients.edit') && user.role === 'CUSTOMER'
+    const canViewDocuments = can('documents.view') && user.role === 'CUSTOMER'
+    const canViewQuotations = can('quotations.view') && user.role === 'CUSTOMER'
 
     return (
         <div className="mt-4">
@@ -65,7 +68,29 @@ function CustomerContent({ user }: { user: AppUser }) {
                         {user.email ?? 'No email'} · Joined {new Date(user.createdAt).toLocaleDateString()}
                     </>
                 }
-                actions={<RoleBadge role={user.role} />}
+                actions={
+                    <div className="flex flex-wrap items-center gap-2">
+                        {canViewDocuments ? (
+                            <Link
+                                to={`/clients/documents?space=CUSTOMER&customer=${encodeURIComponent(user.id)}`}
+                                className={`${ghostActionClass} inline-flex items-center gap-1.5`}
+                            >
+                                <FolderOpen size={15} strokeWidth={1.75} />
+                                Documents
+                            </Link>
+                        ) : null}
+                        {canViewQuotations ? (
+                            <Link
+                                to={`/clients/quotations?customer=${encodeURIComponent(user.id)}`}
+                                className={`${ghostActionClass} inline-flex items-center gap-1.5`}
+                            >
+                                <FileText size={15} strokeWidth={1.75} />
+                                Quotations
+                            </Link>
+                        ) : null}
+                        <RoleBadge role={user.role} />
+                    </div>
+                }
             />
 
             <div className="mt-6 max-w-3xl space-y-5">

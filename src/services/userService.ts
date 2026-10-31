@@ -2,7 +2,18 @@ import { api } from './api'
 
 export type AppUserRole = 'CUSTOMER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN'
 
-export type Capability = 'content.edit' | 'clients.view' | 'clients.edit' | 'team.view' | 'business.edit'
+export type Capability =
+    | 'content.edit'
+    | 'clients.view'
+    | 'clients.edit'
+    | 'team.view'
+    | 'business.edit'
+    | 'documents.view'
+    | 'documents.manage'
+    | 'documents.share'
+    | 'quotations.view'
+    | 'quotations.manage'
+    | 'quotations.share'
 
 export type AppUser = {
     id: string

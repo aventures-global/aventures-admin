@@ -15,7 +15,7 @@ export const selectClass =
     'h-9 rounded-[3px] border border-royal/25 bg-white/80 text-sm text-ink outline-none transition focus:border-royal'
 
 export const primaryActionClass =
-    'btn-royal inline-flex items-center gap-1.5 rounded-[3px] px-3.5 py-2 text-sm disabled:pointer-events-none disabled:opacity-60'
+    'btn-royal inline-flex items-center gap-1.5 whitespace-nowrap rounded-[3px] px-3.5 py-2 text-sm disabled:pointer-events-none disabled:opacity-60'
 
 export const ghostActionClass =
-    'rounded-[3px] border border-royal/25 px-3 py-1.5 text-sm text-ink/75 transition hover:border-royal hover:text-royal disabled:pointer-events-none disabled:opacity-40'
+    'inline-flex items-center gap-1.5 whitespace-nowrap rounded-[3px] border border-royal/25 px-3 py-1.5 text-sm text-ink/75 transition hover:border-royal hover:text-royal disabled:pointer-events-none disabled:opacity-40'

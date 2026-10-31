@@ -43,6 +43,9 @@ import VisaPageEditor from '../pages/cms/VisaPageEditor'
 import VisaPages from '../pages/cms/VisaPages'
 import CustomerDetail from '../pages/clients/CustomerDetail'
 import Customers from '../pages/clients/Customers'
+import Documents from '../pages/clients/Documents'
+import QuotationEditor from '../pages/clients/QuotationEditor'
+import Quotations from '../pages/clients/Quotations'
 
 export type NavItem = {
     label: string
@@ -154,7 +157,7 @@ export const navGroups: NavGroup[] = [
                 label: 'Quotations',
                 path: 'quotations',
                 icon: FileText,
-                wave: 'next',
+                wave: 'live',
                 summary: 'Build, send, and track customer quotations.',
                 goals: [
                     'Customer-specific pricing with selected services and package details',
@@ -162,6 +165,11 @@ export const navGroups: NavGroup[] = [
                     'Quotation status and history',
                     'PDF generation and customer access to the quote',
                     'Convert an accepted quote into a booking',
+                ],
+                element: Quotations,
+                routes: [
+                    { path: 'new', element: QuotationEditor },
+                    { path: ':id', element: QuotationEditor },
                 ],
             },
             {
@@ -181,6 +189,7 @@ export const navGroups: NavGroup[] = [
                 path: 'bookings',
                 icon: CalendarCheck,
                 wave: 'later',
+                // After Quotations: accepted quotes create a minimal booking row; this page expands that workflow.
                 summary: 'The central booking workflow from confirmation to completion.',
                 goals: [
                     'Service and package selection',
@@ -206,19 +215,21 @@ export const navGroups: NavGroup[] = [
                 label: 'Documents',
                 path: 'documents',
                 icon: FolderOpen,
-                wave: 'next',
-                summary: 'Passports, IDs, and supporting files for each customer.',
+                wave: 'live',
+                summary: 'Passports, IDs, supporting files, and company file management.',
                 goals: [
-                    'Customer uploads with categories and document status',
+                    'Customer documents with categories and status',
+                    'Company file folders for internal staff use',
                     'Search and filter across customers',
-                    'Staff and admin access controls',
-                    'Linked to bookings and visa applications',
+                    'Staff access controls and share links',
                 ],
+                element: Documents,
             },
             {
                 label: 'Payments',
                 path: 'payments',
                 icon: Wallet,
+                // Deferred until Quotations + booking handoff exist. Not a business expense/income ledger.
                 wave: 'later',
                 summary: 'Record payments and balances for each booking.',
                 goals: [
@@ -226,6 +237,7 @@ export const navGroups: NavGroup[] = [
                     'Transaction history and payment notes',
                     'Basic payment reports',
                     'Tracking only; online payment is a separate integration',
+                    'Depends on Quotations then Bookings; full expense/income ledger is a separate later quote',
                 ],
             },
             {
@@ -396,6 +408,7 @@ export const navGroups: NavGroup[] = [
                 label: 'Reports',
                 path: 'reports',
                 icon: ChartColumn,
+                // Deferred with Payments; payment summaries wait until booking payments exist.
                 wave: 'later',
                 summary: 'Management view of inquiries, leads, bookings, payments, and visas.',
                 goals: [
