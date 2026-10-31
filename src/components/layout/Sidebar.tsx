@@ -137,8 +137,14 @@ function ProfileMenu({ onNavigate }: { onNavigate?: () => void }) {
     const navigate = useNavigate()
     const [open, setOpen] = useState(false)
     const [signingOut, setSigningOut] = useState(false)
+    const [photoFailed, setPhotoFailed] = useState(false)
     const rootRef = useRef<HTMLDivElement>(null)
     const menuId = useId()
+    const photoUrl = appUser?.profilePicture
+
+    useEffect(() => {
+        setPhotoFailed(false)
+    }, [photoUrl])
 
     useEffect(() => {
         if (!open) return
@@ -224,9 +230,18 @@ function ProfileMenu({ onNavigate }: { onNavigate?: () => void }) {
                     open ? 'bg-royal/5' : ''
                 }`}
             >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal font-noto-serif text-[11px] tracking-wide text-cream">
-                    {initialsFromName(displayName)}
-                </span>
+                {photoUrl && !photoFailed ? (
+                    <img
+                        src={photoUrl}
+                        alt=""
+                        className="h-8 w-8 shrink-0 rounded-full border border-royal/15 object-cover"
+                        onError={() => setPhotoFailed(true)}
+                    />
+                ) : (
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal font-noto-serif text-[11px] tracking-wide text-cream">
+                        {initialsFromName(displayName)}
+                    </span>
+                )}
                 <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-medium text-ink">{displayName}</span>
                     {appUser ? (
