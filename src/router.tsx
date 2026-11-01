@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import Login from './pages/Login'
 import PlannedPage from './pages/PlannedPage'
 import ResetPassword from './pages/ResetPassword'
+import Roadmap from './pages/Roadmap'
 import Signup from './pages/Signup'
 import VerifyEmail from './pages/VerifyEmail'
 import VerifyReset from './pages/VerifyReset'
@@ -20,11 +21,37 @@ const groupRoutes: RouteObject[] = navGroups.map((group) => ({
         { index: true, element: <Navigate to={pagePath(group, group.pages[0])} replace /> },
         ...group.pages.map((page) => {
             const Page = page.element
+            const pageFallback = Page ? <Page /> : <PlannedPage group={group} page={page} />
+            const modalRoutes = (page.routes ?? []).filter((route) => route.presentation === 'modal')
+            const pageRoutes = (page.routes ?? []).filter((route) => route.presentation !== 'modal')
+
+            if (modalRoutes.length > 0) {
+                return {
+                    path: page.path,
+                    children: [
+                        {
+                            element: pageFallback,
+                            children: [
+                                { index: true },
+                                ...modalRoutes.map(({ path, element: Child }) => ({
+                                    path,
+                                    element: <Child />,
+                                })),
+                            ],
+                        },
+                        ...pageRoutes.map(({ path, element: Child }) => ({
+                            path,
+                            element: <Child />,
+                        })),
+                    ],
+                }
+            }
+
             return {
                 path: page.path,
                 children: [
-                    { index: true, element: Page ? <Page /> : <PlannedPage group={group} page={page} /> },
-                    ...(page.routes ?? []).map(({ path, element: Child }) => ({
+                    { index: true, element: pageFallback },
+                    ...pageRoutes.map(({ path, element: Child }) => ({
                         path,
                         element: <Child />,
                     })),
@@ -81,7 +108,12 @@ export const router = createBrowserRouter([
                 <AdminLayout />
             </RequireStaff>
         ),
-        children: [{ index: true, element: <Dashboard /> }, ...groupRoutes, settingsRoute],
+        children: [
+            { index: true, element: <Dashboard /> },
+            { path: 'roadmap', element: <Roadmap /> },
+            ...groupRoutes,
+            settingsRoute,
+        ],
     },
     { path: '/accept-invite', element: <AcceptInvite /> },
     ...publicPages.map(({ path, Page }) => ({

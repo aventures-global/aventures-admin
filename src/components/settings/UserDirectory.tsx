@@ -1,7 +1,8 @@
 import { Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { AdminPanel, DataTableBody, DataTableHead, EmptyState, FilterBar, Pagination } from '../admin'
 import { useAdminUsers } from '../../hooks/useAdminUsers'
-import { ghostActionClass, selectClass } from '../../lib/formStyles'
+import { selectClass } from '../../lib/formStyles'
 import { ROLE_LABELS } from '../../lib/roles'
 import type { AdminUserListParams, UserScope } from '../../services/adminUserService'
 import type { AppUser, AppUserRole } from '../../services/userService'
@@ -49,12 +50,12 @@ export default function UserDirectory({ scope, roles, emptyTitle, emptyBody, onS
 
     return (
         <div>
-            <div className="flex flex-wrap items-center gap-2">
+            <FilterBar>
                 <div className="relative min-w-[14rem] flex-1">
                     <Search
                         size={15}
                         strokeWidth={1.6}
-                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gold-deep"
+                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/40"
                         aria-hidden
                     />
                     <input
@@ -113,46 +114,58 @@ export default function UserDirectory({ scope, roles, emptyTitle, emptyBody, onS
                         </option>
                     ))}
                 </select>
-            </div>
+            </FilterBar>
 
-            <div className="mt-4">
+            <div className="mt-3">
                 {isPending ? (
-                    <div className="space-y-2">
-                        {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="h-12 skeleton-shimmer rounded-[3px]" />
-                        ))}
-                    </div>
+                    <AdminPanel className="overflow-hidden">
+                        <div className="space-y-2 p-4">
+                            {[0, 1, 2, 3].map((i) => (
+                                <div key={i} className="skeleton-paper h-10 rounded-[3px]" />
+                            ))}
+                        </div>
+                    </AdminPanel>
                 ) : isError ? (
-                    <div className="rounded-[3px] border border-red-700/20 bg-red-50/60 px-6 py-12 text-center">
-                        <p className="text-sm text-red-800">{error.message}</p>
-                        <button
-                            type="button"
-                            onClick={() => void refetch()}
-                            className="mt-4 text-sm font-medium text-royal transition hover:text-gold-deep"
-                        >
-                            Try again
-                        </button>
-                    </div>
+                    <AdminPanel>
+                        <EmptyState
+                            title="Couldn’t load users"
+                            body={error.message}
+                            action={
+                                <button
+                                    type="button"
+                                    onClick={() => void refetch()}
+                                    className="text-sm font-medium text-royal hover:underline"
+                                >
+                                    Try again
+                                </button>
+                            }
+                        />
+                    </AdminPanel>
                 ) : data.items.length === 0 ? (
-                    <div className="rounded-[3px] border border-royal/15 px-6 py-16 text-center">
-                        <p className="font-noto-serif text-2xl text-ink">{emptyTitle}</p>
-                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">{emptyBody}</p>
-                    </div>
+                    <AdminPanel>
+                        <EmptyState title={emptyTitle} body={emptyBody} />
+                    </AdminPanel>
                 ) : (
                     <>
-                        <div
-                            className={`paper-card overflow-x-auto rounded-[3px] transition-opacity ${isFetching ? 'opacity-70' : ''}`}
-                        >
+                        <AdminPanel className={`overflow-x-auto transition-opacity ${isFetching ? 'opacity-70' : ''}`}>
                             <table className="w-full min-w-[40rem] text-left text-sm">
-                                <thead className="border-b border-royal/15 bg-cream text-[11px] uppercase tracking-[0.14em] text-ink/55">
+                                <DataTableHead>
                                     <tr>
-                                        <th scope="col" className="px-3 py-2.5 font-normal">User</th>
-                                        <th scope="col" className="px-3 py-2.5 font-normal">Phone</th>
-                                        <th scope="col" className="px-3 py-2.5 font-normal">Role</th>
-                                        <th scope="col" className="px-3 py-2.5 font-normal">Joined</th>
+                                        <th scope="col" className="px-3 py-2.5 font-medium">
+                                            User
+                                        </th>
+                                        <th scope="col" className="px-3 py-2.5 font-medium">
+                                            Phone
+                                        </th>
+                                        <th scope="col" className="px-3 py-2.5 font-medium">
+                                            Role
+                                        </th>
+                                        <th scope="col" className="px-3 py-2.5 font-medium">
+                                            Joined
+                                        </th>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-royal/10">
+                                </DataTableHead>
+                                <DataTableBody>
                                     {data.items.map((user) => {
                                         const name = [user.firstName, user.lastName].filter(Boolean).join(' ')
                                         return (
@@ -181,37 +194,16 @@ export default function UserDirectory({ scope, roles, emptyTitle, emptyBody, onS
                                             </tr>
                                         )
                                     })}
-                                </tbody>
+                                </DataTableBody>
                             </table>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between text-xs text-ink/50">
-                            <p>
-                                {data.total} user{data.total === 1 ? '' : 's'}
-                            </p>
-                            {totalPages > 1 ? (
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        disabled={params.page <= 1}
-                                        onClick={() => setParams((prev) => ({ ...prev, page: prev.page - 1 }))}
-                                        className={ghostActionClass}
-                                    >
-                                        Previous
-                                    </button>
-                                    <span className="tabular-nums">
-                                        Page {params.page} of {totalPages}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        disabled={params.page >= totalPages}
-                                        onClick={() => setParams((prev) => ({ ...prev, page: prev.page + 1 }))}
-                                        className={ghostActionClass}
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            ) : null}
-                        </div>
+                        </AdminPanel>
+                        <Pagination
+                            page={params.page}
+                            totalPages={totalPages}
+                            total={data.total}
+                            isFetching={isFetching}
+                            onPageChange={(page) => setParams((prev) => ({ ...prev, page }))}
+                        />
                     </>
                 )}
             </div>

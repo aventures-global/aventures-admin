@@ -78,7 +78,7 @@ export default function QuotationShareDialog({
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.18 }}
                         onClick={(event) => event.stopPropagation()}
-                        className="w-full max-w-lg rounded-[3px] border border-royal/15 bg-cream p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
+                        className="w-full max-w-lg rounded-[3px] border border-admin-border bg-admin-surface p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
                     >
                         <div className="flex items-start gap-3">
                             <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[3px] bg-royal/8 text-royal">
@@ -131,7 +131,7 @@ export default function QuotationShareDialog({
                             </button>
 
                             {createdUrl ? (
-                                <div className="flex items-center gap-2 rounded-[3px] border border-royal/15 bg-white px-3 py-2">
+                                <div className="flex items-center gap-2 rounded-[3px] border border-admin-border bg-admin-bg px-3 py-2">
                                     <input readOnly value={createdUrl} className={`${fieldClass} border-0 px-0`} />
                                     <button
                                         type="button"
@@ -143,7 +143,7 @@ export default function QuotationShareDialog({
                                 </div>
                             ) : null}
 
-                            {error ? <p className="text-sm text-red-800">{error}</p> : null}
+                            {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
                             <div className="border-t border-royal/10 pt-3">
                                 <p className="text-xs font-medium uppercase tracking-wide text-ink/50">
@@ -168,7 +168,7 @@ export default function QuotationShareDialog({
                                                 <button
                                                     type="button"
                                                     disabled={busy}
-                                                    className="text-red-800 hover:underline disabled:opacity-50"
+                                                    className="text-red-600 hover:underline disabled:opacity-50"
                                                     onClick={() =>
                                                         revokeShare.mutate({
                                                             shareId: share.id,

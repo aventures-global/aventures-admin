@@ -14,6 +14,10 @@ export type Capability =
     | 'quotations.view'
     | 'quotations.manage'
     | 'quotations.share'
+    | 'payments.view'
+    | 'payments.manage'
+    | 'finance.view'
+    | 'finance.manage'
 
 export type AppUser = {
     id: string

@@ -8,7 +8,7 @@ const proseClass = 'text-base leading-8 text-ink/65'
 
 function PreviewFrame({ children }: { children: ReactNode }) {
     return (
-        <div className="luxury-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
+        <div className="preview-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
             {children}
         </div>
     )

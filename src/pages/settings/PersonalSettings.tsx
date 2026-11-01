@@ -61,7 +61,7 @@ export default function PersonalSettings() {
                                 className="h-16 w-16 rounded-full border border-royal/15 object-cover"
                             />
                         ) : (
-                            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-royal font-noto-serif text-xl text-cream">
+                            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-royal text-xl font-medium text-white">
                                 {displayName.slice(0, 1).toUpperCase()}
                             </span>
                         )}

@@ -133,7 +133,7 @@ export default function FaqCatalogTab({ data }: FaqCatalogTabProps) {
             <section aria-labelledby="faq-catalog-heading" className="space-y-3">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
-                        <h2 id="faq-catalog-heading" className="font-noto-serif text-xl text-ink">
+                        <h2 id="faq-catalog-heading" className="text-base font-semibold text-ink">
                             Catalog
                         </h2>
                         <p className="mt-1 text-xs text-ink/60">
@@ -227,7 +227,7 @@ export default function FaqCatalogTab({ data }: FaqCatalogTabProps) {
                 <Notice notice={notice} />
 
                 {creating ? (
-                    <div className="paper-card rounded-[3px] border-royal/30 p-4 sm:p-5">
+                    <div className="admin-panel rounded-[3px] border-royal/30 p-4 sm:p-5">
                         <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-royal">New FAQ</p>
                         <FaqEditor
                             categories={categories}
@@ -249,7 +249,7 @@ export default function FaqCatalogTab({ data }: FaqCatalogTabProps) {
 
                 {faqs.length === 0 && !creating ? (
                     <div className="rounded-[3px] border border-royal/15 px-6 py-14 text-center">
-                        <p className="font-noto-serif text-2xl text-ink">No FAQs yet</p>
+                        <p className="text-sm font-medium text-ink">No FAQs yet</p>
                         <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
                             Create the first question to publish it on the FAQ page.
                         </p>
@@ -266,7 +266,7 @@ export default function FaqCatalogTab({ data }: FaqCatalogTabProps) {
                                 return (
                                     <li
                                         key={faq.id}
-                                        className="paper-card rounded-[3px] border-royal/30 p-4 sm:p-5"
+                                        className="admin-panel rounded-[3px] border-royal/30 p-4 sm:p-5"
                                     >
                                         <FaqEditor
                                             initial={faq}
@@ -294,10 +294,10 @@ export default function FaqCatalogTab({ data }: FaqCatalogTabProps) {
                             return (
                                 <li
                                     key={faq.id}
-                                    className="paper-card flex gap-3 rounded-[3px] px-4 py-3"
+                                    className="admin-panel flex gap-3 rounded-[3px] px-4 py-3"
                                 >
                                     <div className="min-w-0 flex-1">
-                                        <p className="font-noto-serif text-[15px] text-ink">{faq.question}</p>
+                                        <p className="text-sm font-medium text-ink">{faq.question}</p>
                                         <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink/55">
                                             {faq.answer}
                                         </p>

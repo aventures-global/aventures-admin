@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState, type FormEvent } from 'react'
-import { fieldClass, labelClass } from '../../lib/formStyles'
+import { fieldClass, ghostActionClass, labelClass, primaryActionClass } from '../../lib/formStyles'
 
 type CreateFolderDialogProps = {
     open: boolean
@@ -45,7 +45,7 @@ export default function CreateFolderDialog({
         <AnimatePresence>
             {open ? (
                 <motion.div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-royal/30 p-4 font-poppins backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-4 font-poppins"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -61,9 +61,9 @@ export default function CreateFolderDialog({
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.18 }}
                         onClick={(event) => event.stopPropagation()}
-                        className="w-full max-w-md rounded-[3px] border border-royal/15 bg-cream p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
+                        className="admin-panel w-full max-w-md rounded-[3px] p-5 shadow-lg"
                     >
-                        <h2 id="create-folder-title" className="font-noto-serif text-xl text-ink">
+                        <h2 id="create-folder-title" className="text-lg font-semibold text-ink">
                             New folder
                         </h2>
                         <p className="mt-2 text-sm leading-relaxed text-ink/65">
@@ -93,14 +93,14 @@ export default function CreateFolderDialog({
                                     type="button"
                                     disabled={busy}
                                     onClick={onClose}
-                                    className="rounded-[3px] border border-royal/25 px-3.5 py-1.5 text-sm text-ink/75 transition hover:border-royal hover:text-royal disabled:opacity-60"
+                                    className={ghostActionClass}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={busy || !name.trim()}
-                                    className="btn-royal rounded-[3px] px-3.5 py-1.5 text-sm disabled:opacity-60"
+                                    className={primaryActionClass}
                                 >
                                     {busy ? 'Creating…' : 'Create folder'}
                                 </button>

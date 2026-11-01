@@ -124,8 +124,8 @@ function TeamMemberContent({ user }: { user: AppUser }) {
                     }
                 />
 
-                <section className="paper-card space-y-4 rounded-[3px] p-5">
-                    <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Access</p>
+                <section className="admin-panel space-y-4 rounded-[3px] p-5">
+                    <p className="text-xs font-medium text-ink/50">Access</p>
                     {user.role === 'SUPER_ADMIN' ? (
                         <p className="text-sm text-ink/65">
                             This is the super admin account. Its role is set on the server and cannot be changed here.

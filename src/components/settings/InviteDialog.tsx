@@ -79,7 +79,7 @@ function InviteFlow({ initialUser, onClose }: { initialUser?: AppUser; onClose: 
     if (result) {
         return (
             <div>
-                <h2 id="invite-dialog-title" className="font-noto-serif text-xl text-ink">
+                <h2 id="invite-dialog-title" className="text-lg font-semibold text-ink">
                     Invitation {result.emailSent ? 'sent' : 'created'}
                 </h2>
                 {result.emailSent ? (
@@ -113,7 +113,7 @@ function InviteFlow({ initialUser, onClose }: { initialUser?: AppUser; onClose: 
 
     return (
         <div>
-            <h2 id="invite-dialog-title" className="font-noto-serif text-xl text-ink">
+            <h2 id="invite-dialog-title" className="text-lg font-semibold text-ink">
                 Invite to the team
             </h2>
             <p className="mt-1 text-sm text-ink/60">

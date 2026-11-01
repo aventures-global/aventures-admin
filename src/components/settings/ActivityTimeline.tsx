@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { useUserActivity } from '../../hooks/useAdminUsers'
-import { ghostActionClass } from '../../lib/formStyles'
+import { ghostActionClass, linkClass } from '../../lib/formStyles'
 import { ROLE_LABELS } from '../../lib/roles'
 import type { ActivityEntry } from '../../services/adminUserService'
 import type { AppUser, AppUserRole } from '../../services/userService'
@@ -36,20 +37,65 @@ function describe(entry: ActivityEntry, userId: string) {
             return `${actor} updated the business settings`
         case 'role_permissions.updated':
             return `${actor} updated the role permissions`
+        case 'payment.created':
+            return `${actor} recorded a payment for ${subject}`
+        case 'payment.updated':
+            return `${actor} updated a payment for ${subject}`
+        case 'payment.voided':
+            return `${actor} voided a payment for ${subject}`
+        case 'booking.due_updated':
+            return `${actor} updated the payment due date for ${subject}`
+        case 'finance.entry.created':
+            return `${actor} added a finance ledger entry`
+        case 'finance.entry.updated':
+            return `${actor} updated a finance ledger entry`
+        case 'finance.entry.voided':
+            return `${actor} voided a finance ledger entry`
+        case 'finance.category.created':
+            return `${actor} created a finance category`
+        case 'finance.category.archived':
+            return `${actor} archived a finance category`
         default:
             return `${actor}: ${entry.action}`
     }
 }
 
-export default function ActivityTimeline({ user }: { user: AppUser }) {
+type ActivityTimelineProps = {
+    user: AppUser
+    /** Page size; defaults to 20. Use a smaller value for overview previews. */
+    limit?: number
+    /** Hide pagination and show only the first page (plus account-created on last page). */
+    compact?: boolean
+    /** Optional header action, e.g. a See all link on the customer overview. */
+    headerAction?: ReactNode
+    seeAllTo?: string
+}
+
+export default function ActivityTimeline({
+    user,
+    limit = 20,
+    compact = false,
+    headerAction,
+    seeAllTo,
+}: ActivityTimelineProps) {
     const [page, setPage] = useState(1)
-    const { data, isPending, isError, error } = useUserActivity(user.id, page)
+    const { data, isPending, isError, error } = useUserActivity(user.id, page, limit)
     const totalPages = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1
     const isLastPage = page >= totalPages
+    const action =
+        headerAction ??
+        (seeAllTo ? (
+            <Link to={seeAllTo} className={`${linkClass} text-xs no-underline hover:underline`}>
+                See all
+            </Link>
+        ) : null)
 
     return (
-        <section className="paper-card space-y-4 rounded-[3px] p-5">
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Activity</p>
+        <section className="admin-panel space-y-4 rounded-[3px] p-5">
+            <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Activity</p>
+                {action}
+            </div>
             {isPending ? (
                 <div className="space-y-2">
                     {[0, 1, 2].map((i) => (
@@ -68,7 +114,7 @@ export default function ActivityTimeline({ user }: { user: AppUser }) {
                                 <p className="text-xs text-ink/45">{new Date(entry.createdAt).toLocaleString()}</p>
                             </li>
                         ))}
-                        {isLastPage ? (
+                        {(!compact && isLastPage) || (compact && !data.items.length) ? (
                             <li className="relative">
                                 <span aria-hidden className="absolute top-1.5 -left-[1.3rem] h-2 w-2 rounded-full bg-royal/40" />
                                 <p className="text-sm text-ink">Created an account</p>
@@ -76,7 +122,7 @@ export default function ActivityTimeline({ user }: { user: AppUser }) {
                             </li>
                         ) : null}
                     </ol>
-                    {totalPages > 1 ? (
+                    {!compact && totalPages > 1 ? (
                         <div className="flex items-center justify-end gap-2 text-xs text-ink/50">
                             <button
                                 type="button"

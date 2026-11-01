@@ -1,13 +1,19 @@
 import { FileUp, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { fieldClass, labelClass, selectClass } from '../../lib/formStyles'
+import {
+    fieldClass,
+    ghostActionClass,
+    labelClass,
+    primaryActionClass,
+} from '../../lib/formStyles'
 import {
     CATEGORY_LABELS,
     formatBytes,
     type DocumentCategory,
     type FileSpace,
 } from '../../services/documentService'
+import SelectMenu from '../ui/SelectMenu'
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as DocumentCategory[]
 
@@ -85,7 +91,7 @@ export default function UploadDocumentDialog({
         <AnimatePresence>
             {open ? (
                 <motion.div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-royal/30 p-4 font-poppins backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-4 font-poppins"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -101,9 +107,9 @@ export default function UploadDocumentDialog({
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.18 }}
                         onClick={(event) => event.stopPropagation()}
-                        className="w-full max-w-lg rounded-[3px] border border-royal/15 bg-cream p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
+                        className="admin-panel w-full max-w-lg rounded-[3px] p-5 shadow-lg"
                     >
-                        <h2 id="upload-document-title" className="font-noto-serif text-xl text-ink">
+                        <h2 id="upload-document-title" className="text-lg font-semibold text-ink">
                             Upload files
                         </h2>
                         <p className="mt-2 text-sm leading-relaxed text-ink/65">
@@ -115,7 +121,7 @@ export default function UploadDocumentDialog({
                         <form className="mt-5 space-y-4" onSubmit={submit}>
                             <div
                                 className={`rounded-[3px] border border-dashed px-4 py-6 text-center transition ${
-                                    dragOver ? 'border-royal bg-royal/5' : 'border-royal/25 bg-white/50'
+                                    dragOver ? 'border-royal bg-royal/5' : 'border-admin-border bg-admin-surface'
                                 }`}
                                 onDragOver={(event) => {
                                     event.preventDefault()
@@ -133,7 +139,7 @@ export default function UploadDocumentDialog({
                                 <button
                                     type="button"
                                     disabled={busy}
-                                    className="mt-3 rounded-[3px] border border-royal/25 px-3 py-1.5 text-sm text-royal transition hover:border-royal disabled:opacity-60"
+                                    className={`${ghostActionClass} mt-3`}
                                     onClick={() => inputRef.current?.click()}
                                 >
                                     Choose files
@@ -152,7 +158,7 @@ export default function UploadDocumentDialog({
                             </div>
 
                             {files.length > 0 ? (
-                                <ul className="max-h-40 divide-y divide-royal/10 overflow-y-auto rounded-[3px] border border-royal/10 bg-white/70">
+                                <ul className="max-h-40 divide-y divide-admin-border overflow-y-auto rounded-[3px] border border-admin-border bg-admin-surface">
                                     {files.map((file) => (
                                         <li key={`${file.name}:${file.size}`} className="flex items-center gap-2 px-3 py-2 text-sm">
                                             <span className="min-w-0 flex-1 truncate text-ink">{file.name}</span>
@@ -179,21 +185,19 @@ export default function UploadDocumentDialog({
                             ) : null}
 
                             {space === 'CUSTOMER' ? (
-                                <label className="block">
+                                <div>
                                     <span className={labelClass}>Category</span>
-                                    <select
-                                        className={`${selectClass} w-full`}
+                                    <SelectMenu
                                         value={category}
+                                        aria-label="Category"
                                         disabled={busy}
-                                        onChange={(event) => setCategory(event.target.value as DocumentCategory)}
-                                    >
-                                        {CATEGORIES.map((item) => (
-                                            <option key={item} value={item}>
-                                                {CATEGORY_LABELS[item]}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
+                                        onChange={setCategory}
+                                        options={CATEGORIES.map((item) => ({
+                                            value: item,
+                                            label: CATEGORY_LABELS[item],
+                                        }))}
+                                    />
+                                </div>
                             ) : null}
 
                             {files.length === 1 ? (
@@ -232,14 +236,14 @@ export default function UploadDocumentDialog({
                                     type="button"
                                     disabled={busy}
                                     onClick={onClose}
-                                    className="rounded-[3px] border border-royal/25 px-3.5 py-1.5 text-sm text-ink/75 transition hover:border-royal hover:text-royal disabled:opacity-60"
+                                    className={ghostActionClass}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={busy || files.length === 0}
-                                    className="btn-royal rounded-[3px] px-3.5 py-1.5 text-sm disabled:opacity-60"
+                                    className={primaryActionClass}
                                 >
                                     {busy
                                         ? 'Uploading…'

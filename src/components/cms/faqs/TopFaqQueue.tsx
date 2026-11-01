@@ -82,7 +82,7 @@ export default function TopFaqQueue({ queue, limit, candidates, busy, onAdd, onR
                         const faq = candidates.find((item) => item.id === event.target.value)
                         if (faq) onAdd(faq)
                     }}
-                    className="h-9 w-full cursor-pointer appearance-none rounded-[3px] border border-royal/25 bg-white/80 pr-8 pl-3 text-sm text-ink outline-none transition focus:border-royal disabled:cursor-not-allowed disabled:opacity-60"
+                    className="h-9 w-full cursor-pointer appearance-none rounded-[3px] border border-admin-border bg-admin-surface pr-8 pl-3 text-sm text-ink outline-none transition focus:border-royal disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     <option value="" disabled>
                         {candidates.length === 0 ? 'Every FAQ is already shown' : 'Add an FAQ to the end…'}

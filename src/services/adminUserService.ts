@@ -78,9 +78,13 @@ export async function setAdminUserRole(id: string, role: AssignableRole): Promis
     return data.user
 }
 
-export async function getUserActivity(id: string, page: number): Promise<Paged<ActivityEntry>> {
+export async function getUserActivity(
+    id: string,
+    page: number,
+    limit = 20,
+): Promise<Paged<ActivityEntry>> {
     const { data } = await api.get<Paged<ActivityEntry>>(`/api/admin/users/${encodeURIComponent(id)}/activity`, {
-        params: { page, limit: 20 },
+        params: { page, limit },
     })
     return data
 }

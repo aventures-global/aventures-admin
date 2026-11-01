@@ -211,7 +211,7 @@ function Editor({ catalog }: { catalog: VisaCatalog }) {
                 </a>
             </div>
 
-            <div className="@container luxury-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
+            <div className="@container preview-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
                 <section className="relative flex min-h-[490px] items-center bg-oat py-20">
                     <img
                         src={publicSiteUrl('/assets/images/visa-services.jpg?v=1')}

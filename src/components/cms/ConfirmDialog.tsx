@@ -37,7 +37,7 @@ export default function ConfirmDialog({
         <AnimatePresence>
             {open ? (
                 <motion.div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-royal/30 p-4 font-poppins backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-4 font-poppins"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -53,9 +53,9 @@ export default function ConfirmDialog({
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.18 }}
                         onClick={(event) => event.stopPropagation()}
-                        className="w-full max-w-sm rounded-[3px] border border-royal/15 bg-cream p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
+                        className="admin-panel w-full max-w-sm rounded-[3px] p-5 shadow-lg"
                     >
-                        <h2 id="confirm-dialog-title" className="font-noto-serif text-xl text-ink">
+                        <h2 id="confirm-dialog-title" className="text-lg font-semibold text-ink">
                             {title}
                         </h2>
                         <p className="mt-2 text-sm leading-relaxed text-ink/65">{body}</p>

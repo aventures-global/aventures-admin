@@ -2,6 +2,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cardCoverFocus } from '../../../lib/coverFocus'
 import { regionLabel, type TourSearchParams, type TourSort, type TourSummary } from '../../../types/tour'
+import { AdminPanel, DataTableBody, DataTableHead } from '../../admin'
 import SafeImage from '../../ui/SafeImage'
 
 type DestinationTableProps = {
@@ -19,7 +20,7 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
     const header = (label: string, key?: TourSort, className = '') => {
         if (!key) {
             return (
-                <th scope="col" className={`px-3 py-2.5 font-normal ${className}`}>
+                <th scope="col" className={`px-3 py-2.5 font-medium ${className}`}>
                     {label}
                 </th>
             )
@@ -30,7 +31,7 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
             <th
                 scope="col"
                 aria-sort={active ? (dir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                className={`px-3 py-2.5 font-normal ${className}`}
+                className={`px-3 py-2.5 font-medium ${className}`}
             >
                 <button
                     type="button"
@@ -47,9 +48,9 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
     }
 
     return (
-        <div className="paper-card overflow-x-auto rounded-[3px]">
+        <AdminPanel className="overflow-x-auto">
             <table className="w-full min-w-[56rem] text-left text-sm">
-                <thead className="border-b border-royal/15 bg-cream text-[11px] uppercase tracking-[0.14em] text-ink/55">
+                <DataTableHead>
                     <tr>
                         {header('', undefined, 'w-20')}
                         {header('Title', 'name')}
@@ -59,8 +60,8 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                         {header('Featured', 'featured', 'text-center')}
                         {header('Updated', 'updated')}
                     </tr>
-                </thead>
-                <tbody className="divide-y divide-royal/10">
+                </DataTableHead>
+                <DataTableBody>
                     {tours.map((tour) => (
                         <tr
                             key={tour.id}
@@ -80,16 +81,12 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                                 />
                             </td>
                             <td className="px-3 py-2">
-                                <p className="font-noto-serif text-base text-ink">{tour.title}</p>
+                                <p className="font-medium text-ink">{tour.title}</p>
                                 <p className="text-xs text-ink/45">/{tour.slug}</p>
                             </td>
                             <td className="px-3 py-2 text-ink/80">{tour.location}</td>
                             <td className="px-3 py-2">
-                                <span
-                                    className={
-                                        tour.region === 'other' ? 'text-ink/45 italic' : 'text-ink/80'
-                                    }
-                                >
+                                <span className={tour.region === 'other' ? 'text-ink/45 italic' : 'text-ink/80'}>
                                     {regionLabel(tour.region)}
                                 </span>
                             </td>
@@ -99,7 +96,7 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                                     <Star
                                         size={15}
                                         strokeWidth={1.75}
-                                        className="inline fill-gold-deep text-gold-deep"
+                                        className="inline fill-royal text-royal"
                                         aria-label="Featured"
                                     />
                                 ) : (
@@ -113,8 +110,8 @@ export default function DestinationTable({ tours, sort, dir, onSort }: Destinati
                             </td>
                         </tr>
                     ))}
-                </tbody>
+                </DataTableBody>
             </table>
-        </div>
+        </AdminPanel>
     )
 }

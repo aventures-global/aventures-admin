@@ -1,6 +1,7 @@
 import { ArrowRight, Monitor, RefreshCw, Smartphone } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { usePublicFaqs } from '../../../hooks/useFaqs'
+import { segmentActiveClass, segmentGroupClass } from '../../../lib/formStyles'
 import ContactFaqs from './preview/ContactFaqs'
 import FaqBrowser from './preview/FaqBrowser'
 
@@ -29,7 +30,7 @@ export default function FaqPreviewTab() {
                     <div
                         role="group"
                         aria-label="Preview width"
-                        className="inline-flex h-9 items-center rounded-[3px] border border-royal/25 bg-white/60 p-0.5"
+                        className={segmentGroupClass}
                     >
                         <DeviceButton label="Desktop" active={device === 'desktop'} onClick={() => setDevice('desktop')}>
                             <Monitor size={15} strokeWidth={1.6} />
@@ -111,7 +112,7 @@ function PreviewFrame({ label, device, children }: { label: string; device: Devi
         <section aria-label={`${label} preview`}>
             <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-royal">{label}</p>
             <div
-                className={`rounded-[3px] border border-royal/20 bg-oat font-poppins text-ink shadow-[0_10px_30px_rgba(22,55,101,0.06)] ${
+                className={`preview-paper rounded-[3px] border border-royal/20 font-poppins shadow-[0_10px_30px_rgba(22,55,101,0.06)] ${
                     device === 'mobile' ? 'mx-auto max-w-[390px]' : ''
                 }`}
             >
@@ -140,7 +141,7 @@ function DeviceButton({
             aria-pressed={active}
             onClick={onClick}
             className={`flex h-full w-8 items-center justify-center rounded-[2px] transition ${
-                active ? 'bg-royal text-cream' : 'text-ink/55 hover:text-royal'
+                active ? segmentActiveClass : 'text-ink/55 hover:text-royal'
             }`}
         >
             {children}

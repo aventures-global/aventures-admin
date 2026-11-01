@@ -9,6 +9,7 @@ export type QuotationPerson = {
     email: string | null
     firstName: string | null
     lastName: string | null
+    profilePicture: string | null
     displayName: string
 }
 
@@ -62,10 +63,16 @@ export type Quotation = {
     booking: {
         id: string
         status: string
+        paymentStatus?: string
+        paidCents?: number
+        paid?: string
+        remainingCents?: number
+        remaining?: string
         title: string
         totalCents: number
         currency: string
         total: string
+        dueAt?: string | null
     } | null
     items: QuotationItem[]
     shares: QuotationShare[]
@@ -156,6 +163,12 @@ export function changeQuotationStatus(id: string, action: QuotationStatusAction)
 
 export function generateQuotationPdf(id: string) {
     return api.post<{ quotation: Quotation }>(`/api/admin/quotations/${id}/pdf`).then((res) => res.data)
+}
+
+export function sendQuotationEmail(id: string) {
+    return api
+        .post<{ quotation: Quotation; share: QuotationShare }>(`/api/admin/quotations/${id}/send-email`)
+        .then((res) => res.data)
 }
 
 export async function downloadQuotationPdf(id: string, filename: string) {

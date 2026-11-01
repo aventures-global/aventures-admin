@@ -7,7 +7,13 @@ import EditorToolbar from '../../components/cms/EditorToolbar'
 import SafeImage from '../../components/ui/SafeImage'
 import { IMAGE_ACCEPT, useImageUpload } from '../../hooks/useImageUpload'
 import { useCreateMerch, useDeleteMerch, useMerch, useMerchCategories, useUpdateMerch } from '../../hooks/useMerch'
-import { fieldClass, labelClass, linkClass } from '../../lib/formStyles'
+import {
+    fieldClass,
+    labelClass,
+    linkClass,
+    segmentActiveClass,
+    segmentGroupClass,
+} from '../../lib/formStyles'
 import {
     EMPTY_MERCH,
     toMerchDraft,
@@ -374,7 +380,7 @@ function Editor({ product, categories }: { product: MerchProduct | null; categor
                         <div
                             role="group"
                             aria-label="Availability"
-                            className="inline-flex items-center rounded-[3px] border border-royal/25 bg-white/60 p-0.5"
+                            className={segmentGroupClass}
                         >
                             {[
                                 { value: true, label: 'In stock' },
@@ -387,7 +393,7 @@ function Editor({ product, categories }: { product: MerchProduct | null; categor
                                     onClick={() => setField('inStock', option.value)}
                                     className={`rounded-[2px] px-3 py-1 text-xs transition ${
                                         draft.inStock === option.value
-                                            ? 'bg-royal text-cream'
+                                            ? segmentActiveClass
                                             : 'text-ink/60 hover:text-royal'
                                     }`}
                                 >

@@ -6,7 +6,7 @@ import { publicSiteUrl } from '../../lib/publicSite'
 import { SITE_PAGES } from '../../lib/sitePages'
 
 const cardClass =
-    'paper-card group flex h-full flex-col rounded-[3px] p-5 transition hover:border-royal/40 hover:shadow-[0_12px_30px_rgba(22,55,101,0.08)]'
+    'admin-panel group flex h-full flex-col rounded-[3px] p-5 transition hover:border-royal/40'
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -27,8 +27,8 @@ export default function SitePages() {
                     return (
                         <li key={page.id} className="relative">
                             <Link to={page.id} className={cardClass}>
-                                <LayoutTemplate size={18} strokeWidth={1.5} className="text-gold-deep" aria-hidden />
-                                <span className="mt-3 font-noto-serif text-lg leading-snug text-royal">{page.label}</span>
+                                <LayoutTemplate size={18} strokeWidth={1.5} className="text-royal" aria-hidden />
+                                <span className="mt-3 text-base font-semibold leading-snug text-ink">{page.label}</span>
                                 <span className="mt-1 text-xs text-ink/50">{page.path}</span>
                                 <span className="mt-3 text-sm text-ink/60">{page.description}</span>
                                 <span className="mt-4 flex items-center justify-between gap-3 text-xs text-ink/50">

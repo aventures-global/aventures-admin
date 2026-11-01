@@ -42,7 +42,7 @@ export default function TeamAccess() {
                 <Notice notice={notice} />
 
                 <section>
-                    <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-royal">Pending invitations</h2>
+                    <h2 className="mb-3 text-xs font-medium text-ink/50">Pending invitations</h2>
                     <PendingInvitations
                         canManage={isSuperAdmin}
                         onError={(text) => setNotice({ tone: 'error', text })}
@@ -50,7 +50,7 @@ export default function TeamAccess() {
                 </section>
 
                 <section>
-                    <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.3em] text-royal">Team members</h2>
+                    <h2 className="mb-3 text-xs font-medium text-ink/50">Team members</h2>
                     <UserDirectory
                         scope="team"
                         roles={TEAM_ROLES}
