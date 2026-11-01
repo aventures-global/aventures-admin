@@ -6,7 +6,7 @@ import { publicSiteUrl } from '../../lib/publicSite'
 import { VISA_FINDER_PATH, visaPagePath } from '../../lib/visaPaths'
 
 const cardClass =
-    'paper-card group flex h-full flex-col rounded-[3px] p-5 transition hover:border-royal/40 hover:shadow-[0_12px_30px_rgba(22,55,101,0.08)]'
+    'admin-panel group flex h-full flex-col rounded-[3px] p-5 transition hover:border-royal/40'
 
 export default function VisaPages() {
     const { data, isPending, isError, error, refetch } = useVisaCatalog()
@@ -40,11 +40,11 @@ export default function VisaPages() {
                 ) : (
                     <>
                         <Link to="finder" className={`${cardClass} mb-8 sm:flex-row sm:items-center sm:gap-5`}>
-                            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-royal text-gold">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-royal text-white">
                                 <Compass size={20} strokeWidth={1.5} aria-hidden />
                             </span>
                             <span className="mt-3 min-w-0 flex-1 sm:mt-0">
-                                <span className="block font-noto-serif text-xl text-royal">Visa finder</span>
+                                <span className="block text-lg font-semibold text-ink">Visa finder</span>
                                 <span className="mt-1 block text-sm text-ink/60">
                                     The three-question finder, its results, and the service cards at {VISA_FINDER_PATH}
                                 </span>
@@ -54,17 +54,15 @@ export default function VisaPages() {
                             </span>
                         </Link>
 
-                        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.24em] text-ink/50">
-                            Service pages
-                        </h2>
+                        <h2 className="mb-3 text-xs font-medium text-ink/50">Service pages</h2>
                         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                             {data.pages.map((page) => {
                                 const visas = page.visas.flatMap((id) => data.services.find((s) => s.id === id) ?? [])
                                 return (
                                     <li key={page.slug} className="relative">
                                         <Link to={page.slug} className={cardClass}>
-                                            <FileText size={18} strokeWidth={1.5} className="text-gold-deep" aria-hidden />
-                                            <span className="mt-3 font-noto-serif text-lg leading-snug text-royal">
+                                            <FileText size={18} strokeWidth={1.5} className="text-royal" aria-hidden />
+                                            <span className="mt-3 text-base font-semibold leading-snug text-ink">
                                                 {page.title}
                                             </span>
                                             <span className="mt-1 text-xs text-ink/50">{visaPagePath(page.slug)}</span>

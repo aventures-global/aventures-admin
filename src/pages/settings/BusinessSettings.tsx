@@ -93,16 +93,16 @@ function BusinessForm({ settings }: { settings: BusinessSettingsValue }) {
             ) : null}
 
             <fieldset disabled={readOnly} className="space-y-5">
-                <section className="paper-card space-y-4 rounded-[3px] p-5">
-                    <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Contact</p>
+                <section className="admin-panel space-y-4 rounded-[3px] p-5">
+                    <p className="text-xs font-medium text-ink/50">Contact</p>
                     <div className="grid gap-4 sm:grid-cols-2">
                         {field('email', 'Public email', 'email')}
                         {field('phoneDisplay', 'Phone', 'tel')}
                     </div>
                 </section>
 
-                <section className="paper-card space-y-4 rounded-[3px] p-5">
-                    <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Office address</p>
+                <section className="admin-panel space-y-4 rounded-[3px] p-5">
+                    <p className="text-xs font-medium text-ink/50">Office address</p>
                     {form.addressLines.map((line, index) => (
                         <div key={index}>
                             <label htmlFor={`business-address-${index}`} className={labelClass}>
@@ -126,8 +126,8 @@ function BusinessForm({ settings }: { settings: BusinessSettingsValue }) {
                     ))}
                 </section>
 
-                <section className="paper-card space-y-4 rounded-[3px] p-5">
-                    <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Social media</p>
+                <section className="admin-panel space-y-4 rounded-[3px] p-5">
+                    <p className="text-xs font-medium text-ink/50">Social media</p>
                     {SOCIALS.map((social) => (
                         <div key={social.name} className="grid gap-4 sm:grid-cols-[2fr_1fr]">
                             {field(social.url, `${social.name} link`, 'url')}

@@ -17,12 +17,12 @@ export default function SettingsNav({
             <Link
                 to="/"
                 onClick={onNavigate}
-                className="mb-3 inline-flex items-center gap-1.5 px-2.5 text-sm text-ink/60 transition hover:text-royal"
+                className="mb-3 inline-flex items-center gap-1.5 px-2.5 text-sm font-medium text-ink/60 transition hover:text-royal"
             >
                 <ArrowLeft size={14} strokeWidth={1.75} aria-hidden />
-                Back to dashboard
+                Back to admin
             </Link>
-            <p className="px-2.5 pb-2 text-xs font-medium uppercase tracking-[0.3em] text-royal">Settings</p>
+            <p className="px-2.5 pb-2 text-xs font-medium text-ink/45">Settings</p>
             <ul>
                 {settingsTabs
                     .filter((tab) => !tab.permission || can(tab.permission))

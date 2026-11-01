@@ -137,7 +137,7 @@ export default function Testimonials() {
                         <Notice notice={notice} />
 
                         {creating ? (
-                            <div className="paper-card rounded-[3px] border-royal/30 p-4 sm:p-5">
+                            <div className="admin-panel rounded-[3px] border-royal/30 p-4 sm:p-5">
                                 <p className="mb-4 text-xs font-medium uppercase tracking-[0.3em] text-royal">
                                     New testimonial
                                 </p>
@@ -160,7 +160,7 @@ export default function Testimonials() {
 
                         {testimonials.length === 0 && !creating ? (
                             <div className="rounded-[3px] border border-royal/15 px-6 py-14 text-center">
-                                <p className="font-noto-serif text-2xl text-ink">No testimonials yet</p>
+                                <p className="text-sm font-medium text-ink">No testimonials yet</p>
                                 <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
                                     The homepage hides this section until you add one. Destination pages show a
                                     generic quote instead.
@@ -177,7 +177,7 @@ export default function Testimonials() {
                                             editingId === item.id ? (
                                                 <li
                                                     key={item.id}
-                                                    className="paper-card rounded-[3px] border-royal/30 p-4 sm:p-5"
+                                                    className="admin-panel rounded-[3px] border-royal/30 p-4 sm:p-5"
                                                 >
                                                     <TestimonialEditor
                                                         initial={item}
@@ -252,7 +252,7 @@ function TestimonialRow({
         <li
             ref={setNodeRef}
             style={{ transform: CSS.Transform.toString(transform), transition }}
-            className={`paper-card flex items-start gap-3 rounded-[3px] px-3 py-3 ${
+            className={`admin-panel flex items-start gap-3 rounded-[3px] px-3 py-3 ${
                 isDragging ? 'relative z-10 opacity-90 shadow-[0_18px_40px_rgba(22,55,101,0.18)]' : ''
             }`}
         >

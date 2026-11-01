@@ -5,9 +5,9 @@ const STORAGE_KEY = 'aventures-admin-preferences'
 export const DEFAULT_PREFERENCES: Preferences = {
     theme: 'system',
     accent: 'royal',
-    font: 'poppins',
+    font: 'inter',
     textSize: 'default',
-    density: 'comfortable',
+    density: 'compact',
     motion: 'system',
 }
 

@@ -26,7 +26,7 @@ type Option<T extends string> = {
 }
 
 const THEMES: Option<Theme>[] = [
-    { id: 'light', label: 'Light', description: 'Cream pages, matching the public website.', icon: Sun },
+    { id: 'light', label: 'Light', description: 'Neutral workbench for daily ops.', icon: Sun },
     { id: 'dark', label: 'Dark', description: 'Easier on the eyes in low light.', icon: Moon },
     { id: 'system', label: 'Match system', description: 'Follows your device setting.', icon: Monitor },
 ]
@@ -40,8 +40,8 @@ const ACCENTS: Option<Accent>[] = [
 ]
 
 const FONTS: Option<FontFace>[] = [
-    { id: 'poppins', label: 'Poppins', description: 'The brand default.', style: { fontFamily: '"Poppins", sans-serif' } },
-    { id: 'inter', label: 'Inter', description: 'Compact and neutral.', style: { fontFamily: '"Inter", sans-serif' } },
+    { id: 'inter', label: 'Inter', description: 'Default for the workbench.', style: { fontFamily: '"Inter", sans-serif' } },
+    { id: 'poppins', label: 'Poppins', description: 'Closer to the public brand.', style: { fontFamily: '"Poppins", sans-serif' } },
     {
         id: 'system',
         label: 'System',
@@ -106,7 +106,7 @@ function OptionGroup<T extends string>({
                                 active ? 'border-royal bg-royal/[0.06]' : 'border-royal/15 hover:border-royal/50'
                             }`}
                         >
-                            {Icon && <Icon size={18} strokeWidth={1.5} aria-hidden className="text-gold-deep" />}
+                            {Icon && <Icon size={18} strokeWidth={1.5} aria-hidden className="text-royal" />}
                             <span className="flex items-center gap-2 text-sm text-ink" style={option.style}>
                                 {option.swatch && (
                                     <span
@@ -128,8 +128,8 @@ function OptionGroup<T extends string>({
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
     return (
-        <section className="paper-card space-y-5 rounded-[3px] p-5">
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">{title}</p>
+        <section className="admin-panel space-y-5 rounded-[3px] p-5">
+            <p className="text-xs font-medium text-ink/55">{title}</p>
             {children}
         </section>
     )

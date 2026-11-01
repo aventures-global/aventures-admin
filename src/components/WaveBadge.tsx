@@ -1,16 +1,13 @@
 import { WAVE_LABELS, type Wave } from '../config/navigation'
+import StatusBadge, { type StatusTone } from './admin/StatusBadge'
 
-const WAVE_STYLES: Record<Wave, string> = {
-    live: 'bg-emerald-600/10 text-emerald-700',
-    next: 'bg-gold/20 text-gold-ink',
-    later: 'bg-royal/[0.06] text-ink/55',
-    suggested: 'bg-royal/10 text-royal',
+const WAVE_TONES: Record<Wave, StatusTone> = {
+    live: 'success',
+    next: 'warning',
+    later: 'neutral',
+    suggested: 'accent',
 }
 
 export default function WaveBadge({ wave }: { wave: Wave }) {
-    return (
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide ${WAVE_STYLES[wave]}`}>
-            {WAVE_LABELS[wave]}
-        </span>
-    )
+    return <StatusBadge tone={WAVE_TONES[wave]}>{WAVE_LABELS[wave]}</StatusBadge>
 }

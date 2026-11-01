@@ -55,6 +55,13 @@
   /* Reads correctly on top of the gold gradient. */
   --color-gold-ink: #54430f;
 
+  /* Admin chrome surfaces (management workbench). */
+  --color-admin-bg: #f4f4f2;
+  --color-admin-surface: #ffffff;
+  --color-admin-border: #e4e4e0;
+  --color-admin-muted: #6b6b66;
+  --color-admin-accent: #163765;
+
   --font-serif: "DM Serif Text", Georgia, "Times New Roman", serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -63,13 +70,18 @@
   :root {
     /* Brand gradient stop list, reused at different angles. */
     --gold-stops: #ffd700 0%, #ffc300 25%, #ffb000 50%, #ffd700 75%, #fff1b8 100%;
-    --admin-font: "Poppins", system-ui, sans-serif;
+    --admin-font: "Inter", system-ui, -apple-system, sans-serif;
+    --admin-bg: var(--color-admin-bg);
+    --admin-surface: var(--color-admin-surface);
+    --admin-border: var(--color-admin-border);
+    --admin-muted: var(--color-admin-muted);
+    --admin-accent: var(--color-royal);
   }
 
   body {
     margin: 0;
     min-height: 100svh;
-    background-color: var(--color-oat);
+    background-color: var(--admin-bg);
     color: var(--color-ink);
     font-family: var(--admin-font);
     -webkit-font-smoothing: antialiased;
@@ -81,7 +93,7 @@
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--color-gold) 35%, transparent);
+    background: color-mix(in oklab, var(--admin-accent) 22%, transparent);
     color: var(--color-ink);
   }
 }
@@ -108,8 +120,24 @@
     font-family: var(--admin-font);
   }
 
-  /* Admin chrome, matching the cream pages of the public site. */
+  /* Flat admin chrome background (replaces cream luxury paper for shell). */
   .luxury-paper {
+    background-color: var(--admin-bg);
+    background-image: none;
+    color: var(--color-ink);
+  }
+
+  /* CMS preview islands — always the public light palette, even when admin is dark. */
+  .preview-paper {
+    color-scheme: light;
+    --color-ink: #0b0b0b;
+    --color-ink-soft: #141414;
+    --color-ink-card: #1a1a1a;
+    --color-cream: #faf7f0;
+    --color-oat: #f5f0e7;
+    --color-royal: #163765;
+    --color-silver: #e5e7eb;
+    --color-muted: #a3a3a3;
     background-color: var(--color-oat);
     background-image:
       radial-gradient(ellipse at 15% 0%, rgba(255, 255, 255, 0.55), transparent 60%),
@@ -117,34 +145,67 @@
     color: var(--color-ink);
   }
 
+  .preview-paper :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    background-color: rgba(255, 255, 255, 0.85);
+    color: var(--color-ink);
+  }
+
+  /* Admin panels — flat bordered surfaces. */
+  .admin-panel {
+    border: 1px solid var(--admin-border);
+    background-color: var(--admin-surface);
+    box-shadow: none;
+  }
+
+  /* Alias: chrome usages of paper-card become flat admin panels.
+     CMS preview islands that need cream/royal look should use preview-specific classes. */
   .paper-card {
-    border: 1px solid color-mix(in oklab, var(--color-royal) 14%, transparent);
-    background-color: rgba(255, 255, 255, 0.72);
-    box-shadow: 0 10px 30px rgba(22, 55, 101, 0.05);
+    border: 1px solid var(--admin-border);
+    background-color: var(--admin-surface);
+    box-shadow: none;
   }
 
   .btn-royal {
-    border: 2px solid var(--color-royal);
-    background-color: var(--color-royal);
-    color: var(--color-cream);
+    border: 1px solid var(--admin-accent);
+    background-color: var(--admin-accent);
+    color: #fff;
     font-family: var(--admin-font);
     font-weight: 500;
     transition:
-      background-color 0.3s ease,
-      border-color 0.3s ease,
-      color 0.3s ease;
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      opacity 0.15s ease;
   }
 
   .btn-royal:hover {
-    border-color: var(--color-gold-deep);
-    background-color: var(--color-gold-deep);
+    border-color: color-mix(in oklab, var(--admin-accent) 85%, black);
+    background-color: color-mix(in oklab, var(--admin-accent) 85%, black);
     color: #fff;
   }
 
-  .skeleton-paper {
-    background: linear-gradient(90deg, rgba(22, 55, 101, 0.06) 0%, rgba(22, 55, 101, 0.12) 45%, rgba(22, 55, 101, 0.06) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s ease-in-out infinite;
+  /* Soft neutral base + moving highlight (modern skeleton shine). */
+  .skeleton-paper,
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: #ebebea;
+    isolation: isolate;
+  }
+
+  .skeleton-paper::after,
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.55) 45%,
+      rgba(255, 255, 255, 0.85) 55%,
+      transparent 100%
+    );
+    animation: skeleton-shine 1.35s ease-in-out infinite;
   }
 
   .text-gold-gradient {
@@ -183,76 +244,145 @@
   .bg-gold-band {
     background-image: linear-gradient(315deg, var(--gold-stops));
   }
-
-  .skeleton-shimmer {
-    background: linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 45%, #1a1a1a 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s ease-in-out infinite;
-  }
 }
 
-/* Dark admin theme: swaps the palette tokens so existing utilities (text-ink, bg-cream, ...) follow. */
+/* Dark admin theme: remap chrome surfaces; keep cream/oat aliases for any leftover utilities. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-ink: #ece7dc;
+  --color-ink: #e8e6e1;
   --color-cream: #161b24;
   --color-oat: #0f131a;
   --color-royal: #9db8e6;
+  --color-admin-bg: #0f1217;
+  --color-admin-surface: #1a1f28;
+  --color-admin-border: #2a3140;
+  --color-admin-muted: #9a9a94;
+  --admin-bg: var(--color-admin-bg);
+  --admin-surface: var(--color-admin-surface);
+  --admin-border: var(--color-admin-border);
+  --admin-muted: var(--color-admin-muted);
+  --admin-accent: var(--color-royal);
 }
 
 :root[data-theme="dark"] .luxury-paper {
-  background-image:
-    radial-gradient(ellipse at 15% 0%, rgba(157, 184, 230, 0.06), transparent 60%),
-    radial-gradient(ellipse at 90% 100%, rgba(255, 176, 0, 0.03), transparent 55%);
+  background-image: none;
 }
 
-:root[data-theme="dark"] .paper-card {
-  background-color: rgba(28, 34, 45, 0.85);
+:root[data-theme="dark"] .paper-card,
+:root[data-theme="dark"] .admin-panel {
+  background-color: var(--admin-surface);
   box-shadow: none;
 }
 
 :root[data-theme="dark"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
-  background-color: #1c222d;
+  background-color: #141920;
+}
+
+/* Keep editable fields inside public previews on the light surface. */
+:root[data-theme="dark"] .preview-paper :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: rgba(255, 255, 255, 0.85);
+  color: #0b0b0b;
 }
 
 :root[data-theme="dark"] .btn-royal {
   color: #0f131a;
 }
 
-/* Accent colors. Each tone is tuned for contrast against cream (light) and slate (dark) surfaces. */
+/* Translucent white fills read as muddy gray on dark chrome — use admin surfaces instead.
+   Public-site previews keep the light wash under .preview-paper. */
+:root[data-theme="dark"] :is(.bg-white\/50, .bg-white\/60, .bg-white\/70, .bg-white\/80, .bg-white\/85) {
+  background-color: var(--admin-surface);
+}
+
+:root[data-theme="dark"] .preview-paper :is(.bg-white\/50, .bg-white\/60, .bg-white\/70, .bg-white\/80, .bg-white\/85) {
+  background-color: rgb(255 255 255 / 0.6);
+}
+
+:root[data-theme="dark"] .preview-paper .bg-white\/50 {
+  background-color: rgb(255 255 255 / 0.5);
+}
+
+:root[data-theme="dark"] .preview-paper .bg-white\/70 {
+  background-color: rgb(255 255 255 / 0.7);
+}
+
+:root[data-theme="dark"] .preview-paper .bg-white\/80 {
+  background-color: rgb(255 255 255 / 0.8);
+}
+
+:root[data-theme="dark"] .preview-paper .bg-white\/85 {
+  background-color: rgb(255 255 255 / 0.85);
+}
+
+/* Active royal chips/segments need dark ink on the lifted dark-theme accent. */
+:root[data-theme="dark"] :is(.bg-royal.text-cream, .bg-royal.text-cream *) {
+  color: #0f131a;
+}
+
+:root[data-theme="dark"] .preview-paper :is(.bg-royal.text-cream, .bg-royal.text-cream *) {
+  color: var(--color-cream);
+}
+
+:root[data-theme="dark"] :is(.skeleton-paper, .skeleton-shimmer) {
+  background-color: #252a33;
+}
+
+:root[data-theme="dark"] :is(.skeleton-paper, .skeleton-shimmer)::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.14) 55%,
+    transparent 100%
+  );
+}
+
+/* Accent colors sync royal + admin-accent. */
 :root[data-accent="emerald"] {
   --color-royal: #1f5f4a;
+  --admin-accent: #1f5f4a;
 }
 
 :root[data-accent="burgundy"] {
   --color-royal: #6b1f33;
+  --admin-accent: #6b1f33;
 }
 
 :root[data-accent="slate"] {
   --color-royal: #334155;
+  --admin-accent: #334155;
 }
 
 :root[data-accent="gold"] {
   --color-royal: #85600a;
+  --admin-accent: #85600a;
 }
 
 :root[data-theme="dark"][data-accent="emerald"] {
   --color-royal: #8fd1b5;
+  --admin-accent: #8fd1b5;
 }
 
 :root[data-theme="dark"][data-accent="burgundy"] {
   --color-royal: #e3a1b1;
+  --admin-accent: #e3a1b1;
 }
 
 :root[data-theme="dark"][data-accent="slate"] {
   --color-royal: #b6c2d3;
+  --admin-accent: #b6c2d3;
 }
 
 :root[data-theme="dark"][data-accent="gold"] {
   --color-royal: #f0c75e;
+  --admin-accent: #f0c75e;
 }
 
 /* Font face. */
+:root[data-font="poppins"] {
+  --admin-font: "Poppins", system-ui, sans-serif;
+}
+
 :root[data-font="inter"] {
   --admin-font: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -280,7 +410,8 @@
   padding-bottom: 0.375rem;
 }
 
-:root[data-density="compact"] .paper-card:is(.p-5, .p-6) {
+:root[data-density="compact"] .paper-card:is(.p-5, .p-6),
+:root[data-density="compact"] .admin-panel:is(.p-5, .p-6) {
   padding: 0.875rem;
 }
 
@@ -307,22 +438,25 @@
   scroll-behavior: auto !important;
 }
 
-:root[data-motion="reduce"] :is(.skeleton-shimmer, .skeleton-paper) {
+:root[data-motion="reduce"] :is(.skeleton-shimmer, .skeleton-paper),
+:root[data-motion="reduce"] :is(.skeleton-shimmer, .skeleton-paper)::after {
   animation: none !important;
 }
 
-@keyframes shimmer {
+@keyframes skeleton-shine {
   0% {
-    background-position: 100% 0;
+    transform: translateX(-100%);
   }
   100% {
-    background-position: -100% 0;
+    transform: translateX(100%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton-shimmer,
-  .skeleton-paper {
+  .skeleton-paper,
+  .skeleton-shimmer::after,
+  .skeleton-paper::after {
     animation: none;
   }
 }

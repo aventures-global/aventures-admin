@@ -1,19 +1,19 @@
-import { ChevronDown, ChevronsUpDown, LogOut, Settings } from 'lucide-react'
+import { ChevronDown, ChevronsUpDown, LogOut, Map, Settings } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { dashboardItem, isReady, navGroups, pagePath, type NavGroup } from '../../config/navigation'
 import { SETTINGS_BASE } from '../../config/settings'
 import { useAuth } from '../../lib/authContext'
-import BrandWordmark from '../BrandWordmark'
 import { ROLE_LABELS } from '../../lib/roles'
+import BrandWordmark from '../BrandWordmark'
 import SettingsNav from './SettingsNav'
 
-function navLinkClass(active: boolean, muted = false) {
-    return `flex min-h-9 items-center gap-2.5 rounded-[3px] px-2.5 font-noto-serif text-[15px] tracking-wide transition-colors ${
+function navLinkClass(active: boolean) {
+    return `flex min-h-9 items-center gap-2.5 rounded-[3px] px-2.5 text-sm transition-colors ${
         active
-            ? 'bg-royal/[0.06] text-gold-deep'
-            : `${muted ? 'text-ink/45' : 'text-ink/75'} hover:bg-royal/[0.04] hover:text-[#9b7512]`
+            ? 'bg-royal/[0.08] font-medium text-royal'
+            : 'text-ink/70 hover:bg-royal/[0.04] hover:text-ink'
     }`
 }
 
@@ -31,7 +31,7 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
     return (
         <div className="flex h-full flex-col">
-            <div className="px-4 pt-5 pb-5">
+            <div className="px-4 pt-4 pb-4">
                 <Link to="/" aria-label="AVENtures admin home" onClick={onNavigate}>
                     <BrandWordmark className="text-lg" />
                 </Link>
@@ -56,10 +56,19 @@ export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     {navGroups.map((group) => (
                         <SidebarGroup key={group.id} group={group} onNavigate={onNavigate} />
                     ))}
+
+                    <NavLink
+                        to="/roadmap"
+                        className={({ isActive }) => `mt-3 ${navLinkClass(isActive)}`}
+                        onClick={onNavigate}
+                    >
+                        <Map size={15} strokeWidth={1.5} aria-hidden />
+                        Roadmap
+                    </NavLink>
                 </nav>
             )}
 
-            <div className="border-t border-royal/10 p-2">
+            <div className="border-t border-admin-border p-2">
                 <ProfileMenu onNavigate={onNavigate} />
             </div>
         </div>
@@ -70,6 +79,7 @@ function SidebarGroup({ group, onNavigate }: { group: NavGroup; onNavigate?: () 
     const location = useLocation()
     const menuId = useId()
     const GroupIcon = group.icon
+    const livePages = useMemo(() => group.pages.filter(isReady), [group.pages])
 
     const inGroup = location.pathname === group.base || location.pathname.startsWith(`${group.base}/`)
     const [open, setOpen] = useState(inGroup)
@@ -79,6 +89,8 @@ function SidebarGroup({ group, onNavigate }: { group: NavGroup; onNavigate?: () 
         if (inGroup) setOpen(true)
     }
 
+    if (livePages.length === 0) return null
+
     return (
         <div className="mt-0.5">
             <button
@@ -86,7 +98,7 @@ function SidebarGroup({ group, onNavigate }: { group: NavGroup; onNavigate?: () 
                 aria-expanded={open}
                 aria-controls={menuId}
                 onClick={() => setOpen((value) => !value)}
-                className={`${navLinkClass(false)} w-full ${inGroup ? 'text-gold-deep' : ''}`}
+                className={`${navLinkClass(false)} w-full ${inGroup ? 'font-medium text-royal' : ''}`}
             >
                 <GroupIcon size={15} strokeWidth={1.5} aria-hidden />
                 <span className="flex-1 text-left">{group.label}</span>
@@ -106,17 +118,15 @@ function SidebarGroup({ group, onNavigate }: { group: NavGroup; onNavigate?: () 
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="ml-4 overflow-hidden border-l border-royal/15 pl-1.5"
+                        className="ml-4 overflow-hidden border-l border-admin-border pl-1.5"
                     >
-                        {group.pages.map((page) => {
+                        {livePages.map((page) => {
                             const Icon = page.icon
-                            const ready = isReady(page)
                             return (
                                 <li key={page.path} className="py-px">
                                     <NavLink
                                         to={pagePath(group, page)}
-                                        title={ready ? undefined : `${page.label} (not ready yet)`}
-                                        className={({ isActive }) => `${navLinkClass(isActive, !ready)} text-sm`}
+                                        className={({ isActive }) => `${navLinkClass(isActive)} text-sm`}
                                         onClick={onNavigate}
                                     >
                                         <Icon size={14} strokeWidth={1.5} aria-hidden />
@@ -184,9 +194,9 @@ function ProfileMenu({ onNavigate }: { onNavigate?: () => void }) {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.16 }}
-                        className="absolute inset-x-0 bottom-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-[3px] border border-royal/15 bg-cream shadow-[0_18px_40px_rgba(22,55,101,0.14)]"
+                        className="absolute inset-x-0 bottom-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-[3px] border border-admin-border bg-admin-surface shadow-sm"
                     >
-                        <div className="border-b border-royal/10 px-3 py-2.5">
+                        <div className="border-b border-admin-border px-3 py-2.5">
                             <p className="truncate text-sm font-medium text-ink">{displayName}</p>
                             {appUser?.email ? (
                                 <p className="mt-0.5 truncate text-xs text-ink/55">{appUser.email}</p>
@@ -234,11 +244,11 @@ function ProfileMenu({ onNavigate }: { onNavigate?: () => void }) {
                     <img
                         src={photoUrl}
                         alt=""
-                        className="h-8 w-8 shrink-0 rounded-full border border-royal/15 object-cover"
+                        className="h-8 w-8 shrink-0 rounded-full border border-admin-border object-cover"
                         onError={() => setPhotoFailed(true)}
                     />
                 ) : (
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal font-noto-serif text-[11px] tracking-wide text-cream">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-royal text-[11px] font-medium tracking-wide text-white">
                         {initialsFromName(displayName)}
                     </span>
                 )}

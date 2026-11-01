@@ -41,11 +41,17 @@ import Testimonials from '../pages/cms/Testimonials'
 import VisaFinderEditor from '../pages/cms/VisaFinderEditor'
 import VisaPageEditor from '../pages/cms/VisaPageEditor'
 import VisaPages from '../pages/cms/VisaPages'
+import CustomerActivity from '../pages/clients/CustomerActivity'
 import CustomerDetail from '../pages/clients/CustomerDetail'
 import Customers from '../pages/clients/Customers'
 import Documents from '../pages/clients/Documents'
+import PaymentDetail from '../pages/clients/PaymentDetail'
+import PaymentEditor from '../pages/clients/PaymentEditor'
+import Payments from '../pages/clients/Payments'
 import QuotationEditor from '../pages/clients/QuotationEditor'
 import Quotations from '../pages/clients/Quotations'
+import Finance from '../pages/insights/Finance'
+import FinanceEntryEditor from '../pages/insights/FinanceEntryEditor'
 
 export type NavItem = {
     label: string
@@ -60,6 +66,11 @@ export type SubRoute = {
     /** Segment under the page's path, e.g. `new` renders at `/cms/destinations/new`. */
     path: string
     element: ComponentType
+    /**
+     * `modal` keeps the page list mounted and renders this route in its Outlet.
+     * `page` (default) replaces the list with a full-page child.
+     */
+    presentation?: 'page' | 'modal'
 }
 
 export type NavPage = {
@@ -92,7 +103,7 @@ export const WAVE_LABELS: Record<Wave, string> = {
 
 export const WAVE_ORDER: Wave[] = ['live', 'next', 'later', 'suggested']
 
-export const dashboardItem: NavItem = { label: 'Dashboard', to: '/', icon: LayoutDashboard }
+export const dashboardItem: NavItem = { label: 'Home', to: '/', icon: LayoutDashboard }
 
 export const navGroups: NavGroup[] = [
     {
@@ -126,7 +137,10 @@ export const navGroups: NavGroup[] = [
                     'Lead status, staff assignment, internal notes, and exports later',
                 ],
                 element: Customers,
-                routes: [{ path: ':id', element: CustomerDetail }],
+                routes: [
+                    { path: ':id/activity', element: CustomerActivity },
+                    { path: ':id', element: CustomerDetail },
+                ],
             },
             {
                 label: 'Follow-ups',
@@ -229,15 +243,18 @@ export const navGroups: NavGroup[] = [
                 label: 'Payments',
                 path: 'payments',
                 icon: Wallet,
-                // Deferred until Quotations + booking handoff exist. Not a business expense/income ledger.
-                wave: 'later',
+                wave: 'live',
                 summary: 'Record payments and balances for each booking.',
                 goals: [
                     'Amount paid, remaining balance, and payment status',
                     'Transaction history and payment notes',
                     'Basic payment reports',
                     'Tracking only; online payment is a separate integration',
-                    'Depends on Quotations then Bookings; full expense/income ledger is a separate later quote',
+                ],
+                element: Payments,
+                routes: [
+                    { path: 'new', element: PaymentEditor, presentation: 'modal' },
+                    { path: ':id', element: PaymentDetail },
                 ],
             },
             {
@@ -405,10 +422,24 @@ export const navGroups: NavGroup[] = [
         icon: ChartColumn,
         pages: [
             {
+                label: 'Finance',
+                path: 'finance',
+                icon: Wallet,
+                wave: 'live',
+                summary: 'Manual income and expense ledger with cashflow summaries.',
+                goals: [
+                    'Income and expense categories',
+                    'Manual ledger entries',
+                    'Customer payments auto-post as income',
+                    'Period cashflow totals by category',
+                ],
+                element: Finance,
+                routes: [{ path: 'new', element: FinanceEntryEditor, presentation: 'modal' }],
+            },
+            {
                 label: 'Reports',
                 path: 'reports',
                 icon: ChartColumn,
-                // Deferred with Payments; payment summaries wait until booking payments exist.
                 wave: 'later',
                 summary: 'Management view of inquiries, leads, bookings, payments, and visas.',
                 goals: [

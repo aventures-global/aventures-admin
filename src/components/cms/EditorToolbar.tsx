@@ -1,5 +1,6 @@
 import { ArrowLeft, Eye, Loader2, Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { segmentActiveClass, segmentGroupClass } from '../../lib/formStyles'
 
 type EditorToolbarProps = {
     backTo: string
@@ -64,7 +65,7 @@ export default function EditorToolbar({
                         <div
                             role="group"
                             aria-label="Editor mode"
-                            className="mr-1 inline-flex items-center rounded-[3px] border border-royal/25 bg-white/60 p-0.5"
+                            className={`mr-1 ${segmentGroupClass}`}
                         >
                             {(['edit', 'preview'] as const).map((value) => (
                                 <button
@@ -73,7 +74,7 @@ export default function EditorToolbar({
                                     aria-pressed={mode === value}
                                     onClick={() => onModeChange(value)}
                                     className={`inline-flex items-center gap-1.5 rounded-[2px] px-2.5 py-1 text-xs transition ${
-                                        mode === value ? 'bg-royal text-cream' : 'text-ink/60 hover:text-royal'
+                                        mode === value ? segmentActiveClass : 'text-ink/60 hover:text-royal'
                                     }`}
                                 >
                                     {value === 'edit' ? (

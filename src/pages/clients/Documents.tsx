@@ -11,12 +11,14 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { AdminPanel, EmptyState, FilterBar, StatusBadge } from '../../components/admin'
 import ConfirmDialog from '../../components/cms/ConfirmDialog'
 import Notice from '../../components/cms/faqs/Notice'
 import CreateFolderDialog from '../../components/documents/CreateFolderDialog'
 import ShareDialog from '../../components/documents/ShareDialog'
 import UploadDocumentDialog from '../../components/documents/UploadDocumentDialog'
 import PageHeader from '../../components/PageHeader'
+import SelectMenu from '../../components/ui/SelectMenu'
 import {
     useCreateFolder,
     useDeleteDocument,
@@ -28,7 +30,13 @@ import {
 import { useAdminUsers } from '../../hooks/useAdminUsers'
 import { useNotice } from '../../hooks/useNotice'
 import { useAuth } from '../../lib/authContext'
-import { fieldClass, ghostActionClass, primaryActionClass, selectClass } from '../../lib/formStyles'
+import {
+    fieldClass,
+    ghostActionClass,
+    primaryActionClass,
+    segmentActiveClass,
+    segmentGroupClass,
+} from '../../lib/formStyles'
 import {
     CATEGORY_LABELS,
     STATUS_LABELS,
@@ -43,6 +51,18 @@ import {
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as DocumentCategory[]
 const STATUSES = Object.keys(STATUS_LABELS) as DocumentStatus[]
+
+const iconActionClass =
+    'rounded-[3px] p-2 text-ink/45 transition hover:bg-royal/8 hover:text-royal disabled:pointer-events-none disabled:opacity-40'
+
+const rowActionGroupClass =
+    'flex flex-wrap items-center gap-0.5 opacity-100 transition-opacity max-lg:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100'
+
+function documentStatusTone(status: DocumentStatus) {
+    if (status === 'APPROVED') return 'success' as const
+    if (status === 'REJECTED') return 'danger' as const
+    return 'warning' as const
+}
 
 export default function Documents() {
     const { can } = useAuth()
@@ -66,6 +86,7 @@ export default function Documents() {
     const [pendingUploadFiles, setPendingUploadFiles] = useState<File[] | undefined>()
     const [deleteFolderTarget, setDeleteFolderTarget] = useState<DocumentFolder | null>(null)
     const [deleteFileTarget, setDeleteFileTarget] = useState<ManagedDocument | null>(null)
+    const [dragOver, setDragOver] = useState(false)
     const [notice, setNotice] = useNotice()
 
     useEffect(() => {
@@ -114,6 +135,9 @@ export default function Documents() {
     const currentFolderLabel =
         data?.breadcrumb?.length ? data.breadcrumb[data.breadcrumb.length - 1]?.name : undefined
 
+    const canUploadHere =
+        canManage && (space === 'INTERNAL' || Boolean(ownerUserId))
+
     const setSpace = (next: FileSpace) => {
         const nextParams = new URLSearchParams()
         nextParams.set('space', next)
@@ -121,6 +145,7 @@ export default function Documents() {
         setQ('')
         setCategory('all')
         setStatus('all')
+        setDragOver(false)
     }
 
     const setCustomer = (id: string) => {
@@ -191,6 +216,7 @@ export default function Documents() {
     }
 
     const searchingAcross = space === 'CUSTOMER' && Boolean(debouncedQ) && !ownerUserId
+    const canManageHere = canManage && !searchingAcross && (space === 'INTERNAL' || Boolean(ownerUserId))
 
     return (
         <div>
@@ -198,91 +224,97 @@ export default function Documents() {
                 eyebrow="Clients"
                 title="Documents"
                 description="Customer travel documents and company files in one place. Share links are staff-only and can be revoked."
+                actions={
+                    canUploadHere ? (
+                        <button type="button" className={primaryActionClass} onClick={() => openUpload()}>
+                            <Upload size={15} />
+                            Upload
+                        </button>
+                    ) : null
+                }
             />
 
-            <div className="mt-6 flex flex-wrap gap-2">
-                {(
-                    [
-                        { id: 'CUSTOMER' as const, label: 'Customers' },
-                        { id: 'INTERNAL' as const, label: 'Company files' },
-                    ] as const
-                ).map((tab) => (
-                    <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setSpace(tab.id)}
-                        className={
-                            space === tab.id
-                                ? 'rounded-[3px] bg-royal px-3.5 py-2 text-sm text-cream'
-                                : 'rounded-[3px] border border-royal/25 px-3.5 py-2 text-sm text-ink/70 transition hover:border-royal hover:text-royal'
-                        }
-                    >
-                        {tab.label}
-                    </button>
-                ))}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+                <div role="group" aria-label="File space" className={segmentGroupClass}>
+                    {(
+                        [
+                            { id: 'CUSTOMER' as const, label: 'Customers' },
+                            { id: 'INTERNAL' as const, label: 'Company files' },
+                        ] as const
+                    ).map((tab) => (
+                        <button
+                            key={tab.id}
+                            type="button"
+                            aria-pressed={space === tab.id}
+                            onClick={() => setSpace(tab.id)}
+                            className={`h-full rounded-[2px] px-3.5 text-sm transition ${
+                                space === tab.id
+                                    ? segmentActiveClass
+                                    : 'text-ink/55 hover:text-royal'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="mt-4">
                 <Notice notice={notice} />
             </div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                <aside className="paper-card rounded-[3px] p-4">
-                    {space === 'CUSTOMER' ? (
-                        <div>
-                            <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink/50">Customer</p>
-                            <div className="mt-2 max-h-72 space-y-1 overflow-y-auto">
-                                {customers.isPending ? (
-                                    <div className="h-24 skeleton-shimmer rounded-[3px]" />
-                                ) : (
-                                    (customers.data?.items ?? []).map((user) => {
-                                        const label =
-                                            [user.firstName, user.lastName].filter(Boolean).join(' ') ||
-                                            user.email ||
-                                            user.id
-                                        const active = ownerUserId === user.id
-                                        return (
-                                            <button
-                                                key={user.id}
-                                                type="button"
-                                                onClick={() => setCustomer(user.id)}
-                                                className={
-                                                    active
-                                                        ? 'block w-full rounded-[3px] bg-royal/10 px-2.5 py-2 text-left text-sm text-royal'
-                                                        : 'block w-full rounded-[3px] px-2.5 py-2 text-left text-sm text-ink/70 transition hover:bg-royal/5 hover:text-royal'
-                                                }
-                                            >
-                                                <span className="block truncate font-medium">{label}</span>
-                                                {user.email ? (
-                                                    <span className="block truncate text-xs text-ink/45">{user.email}</span>
-                                                ) : null}
-                                            </button>
-                                        )
-                                    })
-                                )}
-                            </div>
-                            {ownerUserId ? (
-                                <Link
-                                    to={`/clients/customers/${ownerUserId}`}
-                                    className="mt-3 inline-block text-xs text-royal underline-offset-2 hover:underline"
-                                >
-                                    Open customer profile
-                                </Link>
-                            ) : null}
+            <div
+                className={`mt-5 grid gap-5 ${
+                    space === 'CUSTOMER' ? 'lg:grid-cols-[20rem_minmax(0,1fr)]' : ''
+                }`}
+            >
+                {space === 'CUSTOMER' ? (
+                    <aside className="admin-panel rounded-[3px] p-4">
+                        <p className="text-xs font-medium text-ink/50">Customer</p>
+                        <div className="mt-2 max-h-[min(70vh,36rem)] space-y-0.5 overflow-y-auto">
+                            {customers.isPending ? (
+                                <div className="h-24 skeleton-shimmer rounded-[3px]" />
+                            ) : (
+                                (customers.data?.items ?? []).map((user) => {
+                                    const label =
+                                        [user.firstName, user.lastName].filter(Boolean).join(' ') ||
+                                        user.email ||
+                                        user.id
+                                    const active = ownerUserId === user.id
+                                    return (
+                                        <button
+                                            key={user.id}
+                                            type="button"
+                                            onClick={() => setCustomer(user.id)}
+                                            className={
+                                                active
+                                                    ? 'block w-full cursor-pointer rounded-[3px] bg-royal/10 px-2.5 py-2 text-left text-sm text-royal'
+                                                    : 'block w-full cursor-pointer rounded-[3px] px-2.5 py-2 text-left text-sm text-ink/70 transition hover:bg-royal/[0.03] hover:text-royal'
+                                            }
+                                        >
+                                            <span className="block truncate font-medium">{label}</span>
+                                            {user.email ? (
+                                                <span className="block truncate text-xs text-ink/45">{user.email}</span>
+                                            ) : null}
+                                        </button>
+                                    )
+                                })
+                            )}
                         </div>
-                    ) : (
-                        <div>
-                            <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink/50">Company files</p>
-                            <p className="mt-2 text-sm leading-6 text-ink/55">
-                                Internal folders and files for the AVENtures team. Not visible to customers.
-                            </p>
-                        </div>
-                    )}
-                </aside>
+                        {ownerUserId ? (
+                            <Link
+                                to={`/clients/customers/${ownerUserId}`}
+                                className="mt-3 inline-block text-xs text-royal underline-offset-2 hover:underline"
+                            >
+                                Open customer profile
+                            </Link>
+                        ) : null}
+                    </aside>
+                ) : null}
 
-                <section className="paper-card min-w-0 rounded-[3px] p-4 sm:p-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="relative min-w-[12rem] flex-1">
+                <div className="min-w-0 space-y-3">
+                    <FilterBar>
+                        <div className="relative min-w-[220px] flex-1">
                             <Search
                                 size={15}
                                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/40"
@@ -300,78 +332,90 @@ export default function Documents() {
                         </div>
                         {space === 'CUSTOMER' ? (
                             <>
-                                <select
-                                    className={selectClass}
+                                <SelectMenu
                                     value={category}
-                                    onChange={(event) => setCategory(event.target.value as DocumentCategory | 'all')}
-                                >
-                                    <option value="all">All categories</option>
-                                    {CATEGORIES.map((item) => (
-                                        <option key={item} value={item}>
-                                            {CATEGORY_LABELS[item]}
-                                        </option>
-                                    ))}
-                                </select>
-                                <select
-                                    className={selectClass}
+                                    aria-label="Category"
+                                    className="w-[12rem] shrink-0"
+                                    onChange={setCategory}
+                                    options={[
+                                        { value: 'all', label: 'All categories' },
+                                        ...CATEGORIES.map((item) => ({
+                                            value: item,
+                                            label: CATEGORY_LABELS[item],
+                                        })),
+                                    ]}
+                                />
+                                <SelectMenu
                                     value={status}
-                                    onChange={(event) => setStatus(event.target.value as DocumentStatus | 'all')}
-                                >
-                                    <option value="all">All statuses</option>
-                                    {STATUSES.map((item) => (
-                                        <option key={item} value={item}>
-                                            {STATUS_LABELS[item]}
-                                        </option>
-                                    ))}
-                                </select>
+                                    aria-label="Status"
+                                    className="w-[11rem] shrink-0"
+                                    onChange={setStatus}
+                                    options={[
+                                        { value: 'all', label: 'All statuses' },
+                                        ...STATUSES.map((item) => ({
+                                            value: item,
+                                            label: STATUS_LABELS[item],
+                                        })),
+                                    ]}
+                                />
                             </>
                         ) : null}
-                    </div>
+                    </FilterBar>
 
-                    {!browseEnabled ? (
-                        <div className="mt-10 px-4 py-12 text-center">
-                            <Folder size={28} className="mx-auto text-royal/40" strokeWidth={1.4} />
-                            <p className="mt-3 font-medium text-ink/80">Select a customer</p>
-                            <p className="mt-1 text-sm text-ink/50">
-                                Choose someone from the list, or search across all customer documents.
-                            </p>
-                        </div>
-                    ) : isPending && !data ? (
-                        <div className="mt-6 h-48 skeleton-shimmer rounded-[3px]" />
-                    ) : isError ? (
-                        <div className="mt-8 text-center">
-                            <p className="text-sm text-red-800">{error.message}</p>
-                            <button type="button" className={`${ghostActionClass} mt-3`} onClick={() => void refetch()}>
-                                Try again
-                            </button>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-royal/10 pb-3">
-                                <nav className="flex flex-wrap items-center gap-1 text-sm text-ink/60">
-                                    <button type="button" className="hover:text-royal" onClick={() => openFolder(null)}>
-                                        {space === 'INTERNAL' ? 'Company files' : 'Root'}
+                    <AdminPanel className="min-w-0 p-4 sm:p-5">
+                        {!browseEnabled ? (
+                            <EmptyState
+                                title="Select a customer"
+                                body="Choose someone from the list, or search across all customer documents."
+                            />
+                        ) : isPending && !data ? (
+                            <div className="h-48 skeleton-shimmer rounded-[3px]" />
+                        ) : isError ? (
+                            <EmptyState
+                                title="Couldn’t load documents"
+                                body={error.message}
+                                action={
+                                    <button
+                                        type="button"
+                                        className={ghostActionClass}
+                                        onClick={() => void refetch()}
+                                    >
+                                        Try again
                                     </button>
-                                    {(data?.breadcrumb ?? []).map((crumb) => (
-                                        <span key={crumb.id} className="inline-flex items-center gap-1">
-                                            <ChevronRight size={14} className="text-ink/30" />
-                                            <button
-                                                type="button"
-                                                className="hover:text-royal"
-                                                onClick={() => openFolder(crumb.id)}
-                                            >
-                                                {crumb.name}
-                                            </button>
-                                        </span>
-                                    ))}
-                                    {searchingAcross ? (
-                                        <span className="ml-2 text-xs text-ink/45">Search results</span>
-                                    ) : null}
-                                    {isFetching ? <span className="ml-2 text-xs text-ink/35">Updating…</span> : null}
-                                </nav>
+                                }
+                            />
+                        ) : (
+                            <>
+                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-admin-border pb-3">
+                                    <nav className="flex flex-wrap items-center gap-1 text-sm text-ink/60">
+                                        <button
+                                            type="button"
+                                            className="cursor-pointer rounded-[3px] px-1.5 py-0.5 transition hover:bg-royal/5 hover:text-royal"
+                                            onClick={() => openFolder(null)}
+                                        >
+                                            {space === 'INTERNAL' ? 'Company files' : 'Root'}
+                                        </button>
+                                        {(data?.breadcrumb ?? []).map((crumb) => (
+                                            <span key={crumb.id} className="inline-flex items-center gap-1">
+                                                <ChevronRight size={14} className="text-ink/30" />
+                                                <button
+                                                    type="button"
+                                                    className="cursor-pointer rounded-[3px] px-1.5 py-0.5 transition hover:bg-royal/5 hover:text-royal"
+                                                    onClick={() => openFolder(crumb.id)}
+                                                >
+                                                    {crumb.name}
+                                                </button>
+                                            </span>
+                                        ))}
+                                        {searchingAcross ? (
+                                            <span className="ml-2 text-xs text-ink/45">Search results</span>
+                                        ) : null}
+                                        {isFetching ? (
+                                            <span className="ml-2 text-xs text-ink/35">Updating…</span>
+                                        ) : null}
+                                    </nav>
 
-                                {canManage && !searchingAcross && (space === 'INTERNAL' || ownerUserId) ? (
-                                    <div className="flex flex-wrap items-center gap-2">
+                                    {canManageHere ? (
                                         <button
                                             type="button"
                                             className={ghostActionClass}
@@ -383,165 +427,226 @@ export default function Documents() {
                                             <FolderPlus size={15} />
                                             New folder
                                         </button>
-                                        <button
-                                            type="button"
-                                            className={primaryActionClass}
-                                            onClick={() => openUpload()}
-                                        >
-                                            <Upload size={15} />
-                                            Upload
-                                        </button>
-                                    </div>
-                                ) : null}
-                            </div>
+                                    ) : null}
+                                </div>
 
-                            <div
-                                className="mt-3"
-                                onDragOver={(event) => {
-                                    if (!canManage || searchingAcross) return
-                                    event.preventDefault()
-                                }}
-                                onDrop={(event) => {
-                                    if (!canManage || searchingAcross) return
-                                    event.preventDefault()
-                                    const dropped = Array.from(event.dataTransfer.files)
-                                    if (dropped.length) openUpload(dropped)
-                                }}
-                            >
-                                {(data?.folders.length ?? 0) === 0 && (data?.files.length ?? 0) === 0 ? (
-                                    <div className="px-4 py-14 text-center">
-                                        <File size={26} className="mx-auto text-royal/35" strokeWidth={1.4} />
-                                        <p className="mt-3 font-medium text-ink/75">No files here yet</p>
-                                        <p className="mt-1 text-sm text-ink/50">
-                                            {canManage
-                                                ? 'Upload a file or create a folder to get started.'
-                                                : 'Nothing has been uploaded in this location.'}
+                                <div
+                                    className={`relative mt-3 rounded-[3px] transition ${
+                                        dragOver
+                                            ? 'border border-dashed border-royal bg-royal/5'
+                                            : 'border border-transparent'
+                                    }`}
+                                    onDragEnter={(event) => {
+                                        if (!canManageHere) return
+                                        event.preventDefault()
+                                        setDragOver(true)
+                                    }}
+                                    onDragOver={(event) => {
+                                        if (!canManageHere) return
+                                        event.preventDefault()
+                                        setDragOver(true)
+                                    }}
+                                    onDragLeave={(event) => {
+                                        if (!canManageHere) return
+                                        const next = event.relatedTarget as Node | null
+                                        if (next && event.currentTarget.contains(next)) return
+                                        setDragOver(false)
+                                    }}
+                                    onDrop={(event) => {
+                                        if (!canManageHere) return
+                                        event.preventDefault()
+                                        setDragOver(false)
+                                        const dropped = Array.from(event.dataTransfer.files)
+                                        if (dropped.length) openUpload(dropped)
+                                    }}
+                                >
+                                    {dragOver ? (
+                                        <p className="pointer-events-none absolute inset-x-0 top-3 z-10 text-center text-sm font-medium text-royal">
+                                            Drop to upload
                                         </p>
-                                    </div>
-                                ) : (
-                                    <ul className="divide-y divide-royal/10">
-                                        {(data?.folders ?? []).map((folder) => (
-                                            <li key={folder.id} className="flex items-center gap-3 py-3">
-                                                <button
-                                                    type="button"
-                                                    className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                                                    onClick={() => openFolder(folder.id)}
+                                    ) : null}
+
+                                    {(data?.folders.length ?? 0) === 0 &&
+                                    (data?.files.length ?? 0) === 0 ? (
+                                        <EmptyState
+                                            title="No files here yet"
+                                            body={
+                                                canManageHere
+                                                    ? 'Upload a file or create a folder to get started.'
+                                                    : 'Nothing has been uploaded in this location.'
+                                            }
+                                            action={
+                                                canManageHere ? (
+                                                    <button
+                                                        type="button"
+                                                        className={primaryActionClass}
+                                                        onClick={() => openUpload()}
+                                                    >
+                                                        <Upload size={15} />
+                                                        Upload
+                                                    </button>
+                                                ) : undefined
+                                            }
+                                        />
+                                    ) : (
+                                        <ul className="divide-y divide-admin-border">
+                                            {(data?.folders ?? []).map((folder) => (
+                                                <li
+                                                    key={folder.id}
+                                                    className="group flex items-center gap-3 px-3 py-3 transition-colors hover:bg-royal/[0.03]"
                                                 >
-                                                    <span className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-royal/8 text-royal">
-                                                        <Folder size={18} strokeWidth={1.5} />
-                                                    </span>
-                                                    <span className="truncate font-medium text-ink">{folder.name}</span>
-                                                </button>
-                                                {canManage ? (
                                                     <button
                                                         type="button"
-                                                        className={ghostActionClass}
-                                                        title="Delete folder"
-                                                        onClick={() => setDeleteFolderTarget(folder)}
+                                                        className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left"
+                                                        onClick={() => openFolder(folder.id)}
                                                     >
-                                                        <Trash2 size={14} />
+                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] bg-royal/8 text-royal">
+                                                            <Folder size={18} strokeWidth={1.5} />
+                                                        </span>
+                                                        <span className="truncate font-medium text-ink">
+                                                            {folder.name}
+                                                        </span>
                                                     </button>
-                                                ) : null}
-                                            </li>
-                                        ))}
-                                        {(data?.files ?? []).map((file) => (
-                                            <li key={file.id} className="flex flex-wrap items-center gap-3 py-3">
-                                                <span className="flex h-9 w-9 items-center justify-center rounded-[3px] bg-royal/8 text-royal">
-                                                    <File size={18} strokeWidth={1.5} />
-                                                </span>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="truncate font-medium text-ink">{file.displayName}</p>
-                                                    <p className="mt-0.5 text-xs text-ink/45">
-                                                        {formatBytes(file.sizeBytes)}
-                                                        {space === 'CUSTOMER' ? (
-                                                            <>
-                                                                {' · '}
-                                                                {CATEGORY_LABELS[file.category]}
-                                                                {' · '}
-                                                                <StatusBadge status={file.status} />
-                                                            </>
-                                                        ) : null}
-                                                        {searchingAcross && file.owner ? (
-                                                            <>
-                                                                {' · '}
-                                                                {file.owner.name || file.owner.email}
-                                                            </>
-                                                        ) : null}
-                                                    </p>
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    {canManage && space === 'CUSTOMER' ? (
-                                                        <select
-                                                            className={selectClass}
-                                                            value={file.status}
-                                                            onChange={(event) =>
-                                                                updateDocument.mutate(
-                                                                    {
-                                                                        id: file.id,
-                                                                        input: {
-                                                                            status: event.target
-                                                                                .value as DocumentStatus,
-                                                                        },
-                                                                    },
-                                                                    {
-                                                                        onError: (err) =>
-                                                                            setNotice({
-                                                                                tone: 'error',
-                                                                                text: err.message,
-                                                                            }),
-                                                                    },
-                                                                )
-                                                            }
-                                                        >
-                                                            {STATUSES.map((item) => (
-                                                                <option key={item} value={item}>
-                                                                    {STATUS_LABELS[item]}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    ) : null}
-                                                    <button
-                                                        type="button"
-                                                        className={ghostActionClass}
-                                                        onClick={() =>
-                                                            void downloadDocument(file.id, file.displayName).catch(
-                                                                (err: Error) =>
-                                                                    setNotice({
-                                                                        tone: 'error',
-                                                                        text: err.message,
-                                                                    }),
-                                                            )
-                                                        }
-                                                    >
-                                                        <Download size={14} />
-                                                    </button>
-                                                    {canShare ? (
-                                                        <button
-                                                            type="button"
-                                                            className={ghostActionClass}
-                                                            onClick={() => setShareFile(file)}
-                                                        >
-                                                            <Link2 size={14} />
-                                                        </button>
-                                                    ) : null}
                                                     {canManage ? (
-                                                        <button
-                                                            type="button"
-                                                            className={ghostActionClass}
-                                                            onClick={() => setDeleteFileTarget(file)}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
+                                                        <div className={rowActionGroupClass}>
+                                                            <button
+                                                                type="button"
+                                                                className={iconActionClass}
+                                                                title="Delete folder"
+                                                                aria-label={`Delete folder ${folder.name}`}
+                                                                onClick={() =>
+                                                                    setDeleteFolderTarget(folder)
+                                                                }
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
                                                     ) : null}
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                        </>
-                    )}
-                </section>
+                                                </li>
+                                            ))}
+                                            {(data?.files ?? []).map((file) => (
+                                                <li
+                                                    key={file.id}
+                                                    className="group flex flex-wrap items-center gap-3 px-3 py-3 transition-colors hover:bg-royal/[0.03]"
+                                                >
+                                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] bg-royal/8 text-royal">
+                                                        <File size={18} strokeWidth={1.5} />
+                                                    </span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate font-medium text-ink">
+                                                            {file.displayName}
+                                                        </p>
+                                                        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink/45">
+                                                            <span>{formatBytes(file.sizeBytes)}</span>
+                                                            {space === 'CUSTOMER' ? (
+                                                                <>
+                                                                    <span aria-hidden>·</span>
+                                                                    <span>
+                                                                        {CATEGORY_LABELS[file.category]}
+                                                                    </span>
+                                                                    <span aria-hidden>·</span>
+                                                                    <StatusBadge
+                                                                        tone={documentStatusTone(
+                                                                            file.status,
+                                                                        )}
+                                                                    >
+                                                                        {STATUS_LABELS[file.status]}
+                                                                    </StatusBadge>
+                                                                </>
+                                                            ) : null}
+                                                            {searchingAcross && file.owner ? (
+                                                                <>
+                                                                    <span aria-hidden>·</span>
+                                                                    <span>
+                                                                        {file.owner.name ||
+                                                                            file.owner.email}
+                                                                    </span>
+                                                                </>
+                                                            ) : null}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        {canManage && space === 'CUSTOMER' ? (
+                                                            <SelectMenu
+                                                                value={file.status}
+                                                                aria-label={`Status for ${file.displayName}`}
+                                                                className="w-[8.5rem] shrink-0"
+                                                                onChange={(next) =>
+                                                                    updateDocument.mutate(
+                                                                        {
+                                                                            id: file.id,
+                                                                            input: { status: next },
+                                                                        },
+                                                                        {
+                                                                            onError: (err) =>
+                                                                                setNotice({
+                                                                                    tone: 'error',
+                                                                                    text: err.message,
+                                                                                }),
+                                                                        },
+                                                                    )
+                                                                }
+                                                                options={STATUSES.map((item) => ({
+                                                                    value: item,
+                                                                    label: STATUS_LABELS[item],
+                                                                }))}
+                                                            />
+                                                        ) : null}
+                                                        <div className={rowActionGroupClass}>
+                                                            <button
+                                                                type="button"
+                                                                className={iconActionClass}
+                                                                title="Download"
+                                                                aria-label={`Download ${file.displayName}`}
+                                                                onClick={() =>
+                                                                    void downloadDocument(
+                                                                        file.id,
+                                                                        file.displayName,
+                                                                    ).catch((err: Error) =>
+                                                                        setNotice({
+                                                                            tone: 'error',
+                                                                            text: err.message,
+                                                                        }),
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Download size={14} />
+                                                            </button>
+                                                            {canShare ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className={iconActionClass}
+                                                                    title="Share"
+                                                                    aria-label={`Share ${file.displayName}`}
+                                                                    onClick={() => setShareFile(file)}
+                                                                >
+                                                                    <Link2 size={14} />
+                                                                </button>
+                                                            ) : null}
+                                                            {canManage ? (
+                                                                <button
+                                                                    type="button"
+                                                                    className={iconActionClass}
+                                                                    title="Delete"
+                                                                    aria-label={`Delete ${file.displayName}`}
+                                                                    onClick={() =>
+                                                                        setDeleteFileTarget(file)
+                                                                    }
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </AdminPanel>
+                </div>
             </div>
 
             <CreateFolderDialog
@@ -652,14 +757,4 @@ export default function Documents() {
             />
         </div>
     )
-}
-
-function StatusBadge({ status }: { status: DocumentStatus }) {
-    const tone =
-        status === 'APPROVED'
-            ? 'text-emerald-800'
-            : status === 'REJECTED'
-              ? 'text-red-800'
-              : 'text-amber-800'
-    return <span className={tone}>{STATUS_LABELS[status]}</span>
 }

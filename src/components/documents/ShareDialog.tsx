@@ -2,8 +2,9 @@ import { Check, Copy, Link2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useCreateShare, useDocumentShares, useRevokeShare } from '../../hooks/useDocuments'
-import { fieldClass, labelClass } from '../../lib/formStyles'
+import { ghostActionClass, labelClass, primaryActionClass } from '../../lib/formStyles'
 import type { ManagedDocument } from '../../services/documentService'
+import SelectMenu from '../ui/SelectMenu'
 
 const EXPIRY_OPTIONS: { hours: 24 | 168 | 720; label: string }[] = [
     { hours: 24, label: '24 hours' },
@@ -57,7 +58,7 @@ export default function ShareDialog({
         <AnimatePresence>
             {open && file ? (
                 <motion.div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-royal/30 p-4 font-poppins backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-4 font-poppins"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -73,14 +74,14 @@ export default function ShareDialog({
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.18 }}
                         onClick={(event) => event.stopPropagation()}
-                        className="w-full max-w-lg rounded-[3px] border border-royal/15 bg-cream p-5 shadow-[0_24px_60px_rgba(22,55,101,0.2)]"
+                        className="admin-panel w-full max-w-lg rounded-[3px] p-5 shadow-lg"
                     >
                         <div className="flex items-start gap-3">
                             <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-[3px] bg-royal/8 text-royal">
                                 <Link2 size={16} strokeWidth={1.75} />
                             </span>
                             <div className="min-w-0">
-                                <h2 id="share-dialog-title" className="font-noto-serif text-xl text-ink">
+                                <h2 id="share-dialog-title" className="text-lg font-semibold text-ink">
                                     Share link
                                 </h2>
                                 <p className="mt-1 truncate text-sm text-ink/65">{file.displayName}</p>
@@ -91,27 +92,25 @@ export default function ShareDialog({
                         </div>
 
                         <div className="mt-5 flex flex-wrap items-end gap-3">
-                            <label className="min-w-[10rem] flex-1">
+                            <div className="min-w-[10rem] flex-1">
                                 <span className={labelClass}>Expires in</span>
-                                <select
-                                    className={fieldClass}
-                                    value={expiresInHours}
+                                <SelectMenu
+                                    value={String(expiresInHours) as '24' | '168' | '720'}
+                                    aria-label="Expires in"
                                     disabled={busy}
-                                    onChange={(event) =>
-                                        setExpiresInHours(Number(event.target.value) as 24 | 168 | 720)
+                                    onChange={(next) =>
+                                        setExpiresInHours(Number(next) as 24 | 168 | 720)
                                     }
-                                >
-                                    {EXPIRY_OPTIONS.map((option) => (
-                                        <option key={option.hours} value={option.hours}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
+                                    options={EXPIRY_OPTIONS.map((option) => ({
+                                        value: String(option.hours) as '24' | '168' | '720',
+                                        label: option.label,
+                                    }))}
+                                />
+                            </div>
                             <button
                                 type="button"
                                 disabled={busy}
-                                className="btn-royal inline-flex items-center gap-1.5 rounded-[3px] px-3.5 py-2 text-sm disabled:opacity-60"
+                                className={primaryActionClass}
                                 onClick={() => {
                                     setError(null)
                                     createShare.mutate(
@@ -134,11 +133,11 @@ export default function ShareDialog({
                         {error ? <p className="mt-3 text-sm text-red-800">{error}</p> : null}
 
                         {createdUrl ? (
-                            <div className="mt-4 flex items-center gap-2 rounded-[3px] border border-royal/15 bg-white/70 px-3 py-2">
+                            <div className="mt-4 flex items-center gap-2 rounded-[3px] border border-admin-border bg-admin-surface px-3 py-2">
                                 <p className="min-w-0 flex-1 truncate text-sm text-ink/80">{createdUrl}</p>
                                 <button
                                     type="button"
-                                    className="inline-flex items-center gap-1 rounded-[3px] border border-royal/25 px-2.5 py-1 text-sm text-ink/75 transition hover:border-royal hover:text-royal"
+                                    className={ghostActionClass}
                                     onClick={() => void copy(createdUrl)}
                                 >
                                     {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -156,7 +155,7 @@ export default function ShareDialog({
                             ) : shares.length === 0 ? (
                                 <p className="mt-3 text-sm text-ink/50">No share links yet.</p>
                             ) : (
-                                <ul className="mt-3 max-h-48 divide-y divide-royal/10 overflow-y-auto">
+                                <ul className="mt-3 max-h-48 divide-y divide-admin-border overflow-y-auto">
                                     {shares.map((share) => (
                                         <li
                                             key={share.id}
@@ -177,7 +176,7 @@ export default function ShareDialog({
                                             {share.status === 'ACTIVE' ? (
                                                 <button
                                                     type="button"
-                                                    className="rounded-[3px] border border-royal/25 px-2.5 py-1 text-sm text-ink/75 transition hover:border-red-700 hover:text-red-800 disabled:opacity-60"
+                                                    className="rounded-[3px] border border-admin-border px-2.5 py-1 text-sm text-ink/75 transition hover:border-red-700 hover:text-red-800 disabled:opacity-60"
                                                     disabled={busy}
                                                     onClick={() =>
                                                         revokeShare.mutate({
@@ -196,12 +195,7 @@ export default function ShareDialog({
                         </div>
 
                         <div className="mt-5 flex justify-end">
-                            <button
-                                type="button"
-                                disabled={busy}
-                                onClick={onClose}
-                                className="rounded-[3px] border border-royal/25 px-3.5 py-1.5 text-sm text-ink/75 transition hover:border-royal hover:text-royal disabled:opacity-60"
-                            >
+                            <button type="button" disabled={busy} onClick={onClose} className={ghostActionClass}>
                                 Done
                             </button>
                         </div>

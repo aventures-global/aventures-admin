@@ -24,6 +24,16 @@ const CAPABILITY_INFO: Record<Capability, { label: string; description: string }
         description: 'Create, edit, send, convert, and delete quotations.',
     },
     'quotations.share': { label: 'Share quotations', description: 'Create and revoke customer quote links.' },
+    'payments.view': { label: 'View payments', description: 'Browse payment records and booking balances.' },
+    'payments.manage': {
+        label: 'Manage payments',
+        description: 'Record, update, and void customer payments.',
+    },
+    'finance.view': { label: 'View finance ledger', description: 'Browse income, expenses, and cashflow summaries.' },
+    'finance.manage': {
+        label: 'Manage finance ledger',
+        description: 'Add and void income or expense entries and categories.',
+    },
 }
 
 const ROLES: { role: ConfigurableRole; label: string }[] = [
@@ -71,7 +81,7 @@ function PermissionMatrix({ value }: { value: RolePermissionsValue }) {
     return (
         <div className="mt-6 max-w-3xl space-y-5">
             <Notice notice={notice} />
-            <div className="paper-card overflow-x-auto rounded-[3px]">
+            <div className="admin-panel overflow-x-auto rounded-[3px]">
                 <table className="w-full min-w-[32rem] text-left text-sm">
                     <thead className="border-b border-royal/15 bg-cream text-[11px] uppercase tracking-[0.14em] text-ink/55">
                         <tr>

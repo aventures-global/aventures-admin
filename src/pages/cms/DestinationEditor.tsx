@@ -27,7 +27,13 @@ import SafeImage from '../../components/ui/SafeImage'
 import { useCreateTour, useDeleteTour, useTour, useTours, useUpdateTour } from '../../hooks/useTours'
 import { cardCoverFocus, heroCoverFocus } from '../../lib/coverFocus'
 import { EMPTY_EXPERIENCE } from '../../lib/destinationContent'
-import { fieldClass, labelClass } from '../../lib/formStyles'
+import {
+    fieldClass,
+    filterChipActiveClass,
+    filterChipClass,
+    filterChipInactiveClass,
+    labelClass,
+} from '../../lib/formStyles'
 import {
     EMPTY_TOUR,
     cleanDraft,
@@ -305,16 +311,14 @@ function Editor({ tour }: { tour: Tour | null }) {
                     type="button"
                     aria-pressed={draft.featured}
                     onClick={() => setField('featured', !draft.featured)}
-                    className={`inline-flex items-center gap-2 rounded-[3px] border px-3 py-2 text-sm transition ${
-                        draft.featured
-                            ? 'border-royal bg-royal text-cream'
-                            : 'border-royal/25 bg-white/60 text-ink/70 hover:border-royal hover:text-royal'
+                    className={`${filterChipClass} py-2 ${
+                        draft.featured ? filterChipActiveClass : filterChipInactiveClass
                     }`}
                 >
                     <Star
                         size={15}
                         strokeWidth={1.75}
-                        className={draft.featured ? 'fill-gold-deep text-gold-deep' : ''}
+                        className={draft.featured ? 'fill-current' : ''}
                         aria-hidden
                     />
                     {draft.featured ? 'Featured on home page' : 'Not featured'}
@@ -365,7 +369,7 @@ function Editor({ tour }: { tour: Tour | null }) {
                 “Fixed” are the same on every destination.
             </p>
 
-            <div className="@container luxury-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
+            <div className="@container preview-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
                 <section className="relative flex h-[34rem] items-end overflow-hidden">
                     <EditableImage
                         className="absolute inset-0"

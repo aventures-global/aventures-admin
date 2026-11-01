@@ -1,7 +1,14 @@
 import { ChevronDown, LayoutGrid, Rows3, Search, Star, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import type { DestinationView } from '../../../hooks/useDestinationFilters'
-import { selectClass as controlClass } from '../../../lib/formStyles'
+import {
+    filterChipActiveClass,
+    filterChipClass,
+    filterChipInactiveClass,
+    segmentActiveClass,
+    segmentGroupClass,
+    selectClass as controlClass,
+} from '../../../lib/formStyles'
 import { REGION_OPTIONS, type TourSearchParams, type TourSort } from '../../../types/tour'
 
 const SORT_OPTIONS: { id: TourSort; label: string }[] = [
@@ -90,16 +97,14 @@ export default function DestinationFilters({
                 type="button"
                 aria-pressed={filters.featured}
                 onClick={() => onChange({ featured: !filters.featured })}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-[3px] border px-3 text-sm transition ${
-                    filters.featured
-                        ? 'border-royal bg-royal text-cream'
-                        : 'border-royal/25 bg-white/60 text-ink/70 hover:border-royal hover:text-royal'
+                className={`${filterChipClass} ${
+                    filters.featured ? filterChipActiveClass : filterChipInactiveClass
                 }`}
             >
                 <Star
                     size={14}
                     strokeWidth={1.75}
-                    className={filters.featured ? 'fill-gold-deep text-gold-deep' : ''}
+                    className={filters.featured ? 'fill-current' : ''}
                     aria-hidden
                 />
                 Featured only
@@ -117,11 +122,7 @@ export default function DestinationFilters({
                 ))}
             </SelectControl>
 
-            <div
-                role="group"
-                aria-label="View"
-                className="inline-flex h-9 items-center rounded-[3px] border border-royal/25 bg-white/60 p-0.5"
-            >
+            <div role="group" aria-label="View" className={segmentGroupClass}>
                 <ViewButton
                     label="Card view"
                     active={view === 'cards'}
@@ -191,7 +192,7 @@ function ViewButton({
             aria-pressed={active}
             onClick={onClick}
             className={`flex h-full w-8 items-center justify-center rounded-[2px] transition ${
-                active ? 'bg-royal text-cream' : 'text-ink/55 hover:text-royal'
+                active ? segmentActiveClass : 'text-ink/55 hover:text-royal'
             }`}
         >
             {children}

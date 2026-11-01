@@ -20,7 +20,8 @@ export const adminUserKeys = {
     all: ['admin-users'] as const,
     list: (params: AdminUserListParams) => ['admin-users', 'list', params] as const,
     detail: (id: string) => ['admin-users', 'detail', id] as const,
-    activity: (id: string, page: number) => ['admin-users', 'activity', id, page] as const,
+    activity: (id: string, page: number, limit = 20) =>
+        ['admin-users', 'activity', id, page, limit] as const,
     invitations: (params: { status?: InvitationStatus | 'all'; userId?: string }) =>
         ['admin-users', 'invitations', params] as const,
 }
@@ -38,10 +39,10 @@ export function useAdminUser(id: string) {
     return useQuery({ queryKey: adminUserKeys.detail(id), queryFn: () => getAdminUser(id) })
 }
 
-export function useUserActivity(id: string, page: number) {
+export function useUserActivity(id: string, page: number, limit = 20) {
     return useQuery({
-        queryKey: adminUserKeys.activity(id, page),
-        queryFn: () => getUserActivity(id, page),
+        queryKey: adminUserKeys.activity(id, page, limit),
+        queryFn: () => getUserActivity(id, page, limit),
         placeholderData: keepPreviousData,
     })
 }

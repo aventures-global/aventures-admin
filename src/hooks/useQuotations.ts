@@ -11,6 +11,7 @@ import {
     listQuotationShares,
     listQuotations,
     revokeQuotationShare,
+    sendQuotationEmail,
     updateQuotation,
     type QuotationCreateInput,
     type QuotationListParams,
@@ -85,6 +86,18 @@ export function useGenerateQuotationPdf() {
     return useMutation({
         mutationFn: (id: string) => generateQuotationPdf(id),
         onSuccess: () => invalidateAll(queryClient),
+    })
+}
+
+export function useSendQuotationEmail() {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (id: string) => sendQuotationEmail(id),
+        onSuccess: (_data, id) => {
+            invalidateAll(queryClient)
+            void queryClient.invalidateQueries({ queryKey: quotationKeys.shares(id) })
+            void queryClient.invalidateQueries({ queryKey: quotationKeys.detail(id) })
+        },
     })
 }
 

@@ -139,11 +139,11 @@ export default function Destinations() {
                         </button>
                     </div>
                 ) : tours.length === 0 ? (
-                    <div className="rounded-[3px] border border-royal/15 px-6 py-16 text-center">
-                        <p className="font-noto-serif text-2xl text-ink">
+                    <div className="admin-panel px-6 py-12 text-center">
+                        <p className="text-sm font-medium text-ink">
                             {hasFilters ? 'No destinations matched' : 'No destinations yet'}
                         </p>
-                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
+                        <p className="mx-auto mt-1 max-w-sm text-sm text-ink/55">
                             {hasFilters
                                 ? 'Try another search or clear the filters.'
                                 : 'Create the first signature journey to publish it on the site.'}
@@ -152,15 +152,12 @@ export default function Destinations() {
                             <button
                                 type="button"
                                 onClick={clearFilters}
-                                className="mt-6 text-sm font-medium text-royal transition hover:text-gold-deep"
+                                className="mt-4 text-sm font-medium text-royal hover:underline"
                             >
                                 Clear filters
                             </button>
                         ) : (
-                            <Link
-                                to="new"
-                                className="mt-6 inline-block text-sm font-medium text-royal transition hover:text-gold-deep"
-                            >
+                            <Link to="new" className="mt-4 inline-block text-sm font-medium text-royal hover:underline">
                                 New destination
                             </Link>
                         )}

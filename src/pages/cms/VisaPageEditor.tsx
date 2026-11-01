@@ -190,7 +190,7 @@ function Editor({ catalog, page }: { catalog: VisaCatalog; page: VisaPage }) {
                 sections marked “Fixed” are the same on every visa page.
             </EditorHint>
 
-            <div className="@container luxury-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
+            <div className="@container preview-paper overflow-hidden rounded-2xl border border-royal/10 font-poppins text-ink">
                 <div className={`${visaContainer} pb-24 pt-14 @2xl:pt-16`}>
                     <div className="mx-auto max-w-4xl">
                         <span className={visaQuietLink}>

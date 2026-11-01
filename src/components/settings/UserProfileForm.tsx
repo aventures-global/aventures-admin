@@ -29,7 +29,7 @@ export default function UserProfileForm({ user, readOnly = false, saving, onSave
     }
 
     return (
-        <form onSubmit={submit} className="paper-card space-y-4 rounded-[3px] p-5">
+        <form onSubmit={submit} className="admin-panel space-y-4 rounded-[3px] p-5">
             <p className="text-xs font-medium uppercase tracking-[0.3em] text-royal">Profile</p>
             {children}
             <fieldset disabled={readOnly} className="grid gap-4 sm:grid-cols-2">

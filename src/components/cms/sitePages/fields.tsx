@@ -129,7 +129,7 @@ export function TitledListField({ label, itemLabel, items, onChange, showErrors 
             <legend className={labelClass}>{label}</legend>
             <ol className="space-y-3">
                 {items.map((item, index) => (
-                    <li key={index} className="rounded-[3px] border border-royal/10 bg-white/50 p-3">
+                    <li key={index} className="rounded-[3px] border border-admin-border bg-admin-surface p-3">
                         <div className="flex items-start gap-2">
                             <div className="grid min-w-0 flex-1 gap-2">
                                 <input

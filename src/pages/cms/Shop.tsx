@@ -120,32 +120,29 @@ function ProductsPanel() {
                         </button>
                     </div>
                 ) : products.length === 0 ? (
-                    <div className="rounded-[3px] border border-royal/15 px-6 py-16 text-center">
-                        <p className="font-noto-serif text-2xl text-ink">No products yet</p>
-                        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink/60">
+                    <div className="admin-panel px-6 py-12 text-center">
+                        <p className="text-sm font-medium text-ink">No products yet</p>
+                        <p className="mx-auto mt-1 max-w-sm text-sm text-ink/55">
                             Add the first product to publish it on the shop.
                         </p>
-                        <Link
-                            to="new"
-                            className="mt-6 inline-block text-sm font-medium text-royal transition hover:text-gold-deep"
-                        >
+                        <Link to="new" className="mt-4 inline-block text-sm font-medium text-royal hover:underline">
                             New product
                         </Link>
                     </div>
                 ) : (
-                    <div className="paper-card overflow-x-auto rounded-[3px]">
+                    <div className="admin-panel overflow-x-auto rounded-[3px]">
                         <table className="w-full min-w-[44rem] text-left text-sm">
-                            <thead className="border-b border-royal/15 bg-cream text-[11px] uppercase tracking-[0.14em] text-ink/55">
+                            <thead className="border-b border-admin-border bg-admin-bg text-[11px] font-medium uppercase tracking-wide text-ink/50">
                                 <tr>
-                                    <th scope="col" className="w-20 px-3 py-2.5 font-normal" />
-                                    <th scope="col" className="px-3 py-2.5 font-normal">Product</th>
-                                    <th scope="col" className="px-3 py-2.5 font-normal">Category</th>
-                                    <th scope="col" className="px-3 py-2.5 font-normal">Sizes</th>
-                                    <th scope="col" className="px-3 py-2.5 text-right font-normal">Price</th>
-                                    <th scope="col" className="px-3 py-2.5 text-center font-normal">Stock</th>
+                                    <th scope="col" className="w-20 px-3 py-2.5 font-medium" />
+                                    <th scope="col" className="px-3 py-2.5 font-medium">Product</th>
+                                    <th scope="col" className="px-3 py-2.5 font-medium">Category</th>
+                                    <th scope="col" className="px-3 py-2.5 font-medium">Sizes</th>
+                                    <th scope="col" className="px-3 py-2.5 text-right font-medium">Price</th>
+                                    <th scope="col" className="px-3 py-2.5 text-center font-medium">Stock</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-royal/10">
+                            <tbody className="divide-y divide-admin-border">
                                 {products.map((product) => (
                                     <tr
                                         key={product.id}
@@ -165,14 +162,14 @@ function ProductsPanel() {
                                             />
                                         </td>
                                         <td className="px-3 py-2">
-                                            <p className="font-noto-serif text-base text-ink">{product.name}</p>
+                                            <p className="font-medium text-ink">{product.name}</p>
                                             <p className="text-xs text-ink/45">/shop/{product.slug}</p>
                                         </td>
                                         <td className="px-3 py-2 text-ink/80">{product.category}</td>
                                         <td className="px-3 py-2 text-ink/60">
                                             {product.sizes?.length ? product.sizes.join(', ') : '—'}
                                         </td>
-                                        <td className="px-3 py-2 text-right font-noto-serif text-base text-royal">
+                                        <td className="px-3 py-2 text-right font-medium text-royal">
                                             {product.price}
                                         </td>
                                         <td className="px-3 py-2 text-center">

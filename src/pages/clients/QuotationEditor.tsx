@@ -1,10 +1,14 @@
-import { ArrowLeft, Download, FileText, Link2, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, Download, Link2, Mail, Plus, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Notice from '../../components/cms/faqs/Notice'
+import CustomerPicker, {
+    type CustomerOption,
+} from '../../components/quotations/CustomerPicker'
+import QuotationReadonlyView from '../../components/quotations/QuotationReadonlyView'
 import QuotationShareDialog from '../../components/quotations/QuotationShareDialog'
+import SelectMenu from '../../components/ui/SelectMenu'
 import PageHeader from '../../components/PageHeader'
-import { useAdminUsers } from '../../hooks/useAdminUsers'
 import { useNotice } from '../../hooks/useNotice'
 import {
     useChangeQuotationStatus,
@@ -13,6 +17,7 @@ import {
     useDeleteQuotation,
     useGenerateQuotationPdf,
     useQuotation,
+    useSendQuotationEmail,
     useUpdateQuotation,
 } from '../../hooks/useQuotations'
 import { useAuth } from '../../lib/authContext'
@@ -21,7 +26,6 @@ import {
     ghostActionClass,
     labelClass,
     primaryActionClass,
-    selectClass,
 } from '../../lib/formStyles'
 import {
     KIND_LABELS,
@@ -43,6 +47,15 @@ type DraftItem = {
     unitMajor: string
     isOptional: boolean
     selected: boolean
+}
+
+type FieldErrors = {
+    customer?: string
+    title?: string
+    items?: string
+    itemTitles?: Record<string, string>
+    itemUnits?: Record<string, string>
+    itemQuantities?: Record<string, string>
 }
 
 function emptyItem(kind: QuotationItemKind = 'SERVICE'): DraftItem {
@@ -71,13 +84,19 @@ function itemsFromQuote(quote: Quotation): DraftItem[] {
     }))
 }
 
+function parseUnitMajor(value: string): number | null {
+    const trimmed = value.trim().replace(/,/g, '')
+    if (!/^\d+(\.\d{1,2})?$/.test(trimmed)) return null
+    return Math.round(Number(trimmed) * 100)
+}
+
 function toItemInputs(items: DraftItem[]): QuotationItemInput[] {
     return items.map((item, index) => ({
         kind: item.kind,
         title: item.title.trim(),
         description: item.description.trim() || null,
         quantity: item.quantity,
-        unitCents: centsFromMajor(item.unitMajor),
+        unitCents: parseUnitMajor(item.unitMajor) ?? centsFromMajor(item.unitMajor),
         isOptional: item.isOptional || item.kind === 'OPTIONAL',
         selected: item.selected,
         sortOrder: index,
@@ -98,6 +117,61 @@ function liveTotals(items: DraftItem[], currency: string) {
     return { subtotal, optional, total: subtotal + optional, format }
 }
 
+function invalidFieldClass(invalid: boolean) {
+    return invalid ? 'border-red-500 focus:border-red-500' : ''
+}
+
+const CURRENCY_OPTIONS = [
+    { value: 'PHP', label: 'PHP' },
+    { value: 'USD', label: 'USD' },
+] as const
+
+const KIND_OPTIONS = (Object.keys(KIND_LABELS) as QuotationItemKind[]).map((kind) => ({
+    value: kind,
+    label: KIND_LABELS[kind],
+}))
+
+function CapsuleToggle({
+    label,
+    checked,
+    disabled,
+    onChange,
+}: {
+    label: string
+    checked: boolean
+    disabled?: boolean
+    onChange: (next: boolean) => void
+}) {
+    return (
+        <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            disabled={disabled}
+            onClick={() => onChange(!checked)}
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                checked
+                    ? 'border-royal bg-royal/15 text-royal'
+                    : 'border-admin-border bg-admin-surface text-ink/65 hover:border-royal/40 hover:text-royal'
+            }`}
+        >
+            {label}
+        </button>
+    )
+}
+
+function personFromQuote(quote: Quotation | undefined): CustomerOption | null {
+    if (!quote?.customer) return null
+    return {
+        id: quote.customer.id,
+        email: quote.customer.email,
+        firstName: quote.customer.firstName,
+        lastName: quote.customer.lastName,
+        profilePicture: quote.customer.profilePicture ?? null,
+        displayName: quote.customer.displayName,
+    }
+}
+
 export default function QuotationEditor() {
     const { id } = useParams()
     const isNew = !id || id === 'new'
@@ -112,6 +186,7 @@ export default function QuotationEditor() {
     const quote = data?.quotation
 
     const [customerUserId, setCustomerUserId] = useState(searchParams.get('customer') ?? '')
+    const [selectedCustomer, setSelectedCustomer] = useState<CustomerOption | null>(null)
     const [title, setTitle] = useState('')
     const [currency, setCurrency] = useState('PHP')
     const [notes, setNotes] = useState('')
@@ -120,31 +195,25 @@ export default function QuotationEditor() {
     const [items, setItems] = useState<DraftItem[]>([emptyItem()])
     const [shareOpen, setShareOpen] = useState(false)
     const [notice, setNotice] = useNotice()
-    const [customerQ, setCustomerQ] = useState('')
+    const [attempted, setAttempted] = useState(false)
+    const [errors, setErrors] = useState<FieldErrors>({})
 
-    const { data: customersData } = useAdminUsers(
-        {
-            scope: 'customers',
-            q: customerQ,
-            role: 'all',
-            sort: 'createdAt',
-            dir: 'desc',
-            limit: 20,
-            page: 1,
-        },
-        { enabled: canManage && isNew },
-    )
+    const titleRef = useRef<HTMLInputElement>(null)
+    const customerSectionRef = useRef<HTMLDivElement>(null)
+    const firstItemTitleRef = useRef<HTMLInputElement>(null)
 
     const create = useCreateQuotation()
     const update = useUpdateQuotation()
     const changeStatus = useChangeQuotationStatus()
     const generatePdf = useGenerateQuotationPdf()
+    const sendEmail = useSendQuotationEmail()
     const convert = useConvertQuotation()
     const remove = useDeleteQuotation()
 
     useEffect(() => {
         if (!quote) return
         setCustomerUserId(quote.customer?.id ?? '')
+        setSelectedCustomer(personFromQuote(quote))
         setTitle(quote.title)
         setCurrency(quote.currency)
         setNotes(quote.notes ?? '')
@@ -153,6 +222,12 @@ export default function QuotationEditor() {
         setItems(itemsFromQuote(quote))
     }, [quote])
 
+    const handleCustomerChange = useCallback((next: CustomerOption | null) => {
+        setSelectedCustomer(next)
+        setCustomerUserId(next?.id ?? '')
+        setErrors((prev) => ({ ...prev, customer: undefined }))
+    }, [])
+
     const totals = useMemo(() => liveTotals(items, currency), [items, currency])
     const editable = isNew || quote?.status === 'DRAFT' || quote?.status === 'SENT'
     const busy =
@@ -160,25 +235,68 @@ export default function QuotationEditor() {
         update.isPending ||
         changeStatus.isPending ||
         generatePdf.isPending ||
+        sendEmail.isPending ||
         convert.isPending ||
         remove.isPending
 
-    const save = () => {
-        const payloadItems = toItemInputs(items)
-        if (!title.trim()) {
-            setNotice({ tone: 'error', text: 'Title is required' })
-            return
+    const handleSendEmail = () => {
+        if (!quote) return
+        sendEmail.mutate(quote.id, {
+            onSuccess: (result) => {
+                setNotice({
+                    tone: 'ok',
+                    text: result.share.url
+                        ? `Email sent to customer · link ready`
+                        : 'Email sent to customer',
+                })
+            },
+            onError: (err) => setNotice({ tone: 'error', text: err.message }),
+        })
+    }
+
+    const validate = (): FieldErrors => {
+        const next: FieldErrors = {}
+        if (isNew && !customerUserId) next.customer = 'Select a customer'
+        if (!title.trim()) next.title = 'Title is required'
+
+        if (!items.length) {
+            next.items = 'Add at least one line item'
         }
-        if (!payloadItems.length || payloadItems.some((item) => !item.title)) {
-            setNotice({ tone: 'error', text: 'Add at least one line item with a title' })
+
+        const itemTitles: Record<string, string> = {}
+        const itemUnits: Record<string, string> = {}
+        const itemQuantities: Record<string, string> = {}
+        for (const item of items) {
+            if (!item.title.trim()) itemTitles[item.key] = 'Title is required'
+            if (item.quantity < 1) itemQuantities[item.key] = 'Quantity must be at least 1'
+            if (parseUnitMajor(item.unitMajor) == null) itemUnits[item.key] = 'Enter a valid unit price'
+        }
+        if (Object.keys(itemTitles).length) next.itemTitles = itemTitles
+        if (Object.keys(itemUnits).length) next.itemUnits = itemUnits
+        if (Object.keys(itemQuantities).length) next.itemQuantities = itemQuantities
+        if (next.itemTitles || next.itemUnits || next.itemQuantities) {
+            next.items = next.items ?? 'Fix line item errors before saving'
+        }
+        return next
+    }
+
+    const save = () => {
+        setAttempted(true)
+        const nextErrors = validate()
+        setErrors(nextErrors)
+        if (Object.keys(nextErrors).length) {
+            setNotice({ tone: 'error', text: 'Fill in the required fields before saving' })
+            if (nextErrors.customer) customerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            else if (nextErrors.title) titleRef.current?.focus()
+            else if (nextErrors.itemTitles || nextErrors.itemUnits || nextErrors.itemQuantities) {
+                firstItemTitleRef.current?.focus()
+            }
             return
         }
 
+        const payloadItems = toItemInputs(items)
+
         if (isNew) {
-            if (!customerUserId) {
-                setNotice({ tone: 'error', text: 'Select a customer' })
-                return
-            }
             create.mutate(
                 {
                     customerUserId,
@@ -219,6 +337,9 @@ export default function QuotationEditor() {
         )
     }
 
+    const primaryLabel = isNew ? 'Create' : 'Save'
+    const showPrimary = canManage && editable
+
     if (!canView) {
         return (
             <div className="mt-4">
@@ -228,7 +349,7 @@ export default function QuotationEditor() {
     }
 
     if (!isNew && isPending) {
-        return <div className="mt-6 h-72 max-w-4xl skeleton-shimmer rounded-[3px]" />
+        return <div className="mt-6 h-72 max-w-6xl skeleton-shimmer rounded-[3px]" />
     }
 
     if (!isNew && (isError || !quote)) {
@@ -245,95 +366,127 @@ export default function QuotationEditor() {
 
     return (
         <div className="mt-4">
-            <PageHeader
-                eyebrow="Quotations"
-                title={isNew ? 'New quotation' : quote!.number}
-                description={
-                    isNew
-                        ? 'Create a customer-specific quote with services, packages, and optional items.'
-                        : `${STATUS_LABELS[quote!.status]} · ${quote!.customer?.displayName ?? 'Customer'}`
-                }
-                actions={
-                    <div className="flex flex-wrap items-center gap-2">
-                        <Link to="/clients/quotations" className={ghostActionClass}>
-                            <ArrowLeft size={15} />
-                            Back
-                        </Link>
-                        {!isNew && quote?.hasPdf ? (
-                            <button
-                                type="button"
-                                className={ghostActionClass}
-                                disabled={busy}
-                                onClick={() =>
-                                    void downloadQuotationPdf(quote.id, `${quote.number}.pdf`).catch(
-                                        (err: Error) => setNotice({ tone: 'error', text: err.message }),
-                                    )
-                                }
-                            >
-                                <Download size={15} />
-                                Download PDF
-                            </button>
-                        ) : null}
-                        {!isNew && canManage ? (
-                            <button
-                                type="button"
-                                className={ghostActionClass}
-                                disabled={busy}
-                                onClick={() =>
-                                    generatePdf.mutate(quote!.id, {
-                                        onSuccess: () => setNotice({ tone: 'ok', text: 'PDF generated' }),
-                                        onError: (err) => setNotice({ tone: 'error', text: err.message }),
-                                    })
-                                }
-                            >
-                                <FileText size={15} />
-                                {quote?.hasPdf ? 'Regenerate PDF' : 'Generate PDF'}
-                            </button>
-                        ) : null}
-                        {!isNew && canShare && quote && quote.status !== 'DRAFT' ? (
-                            <button
-                                type="button"
-                                className={ghostActionClass}
-                                onClick={() => setShareOpen(true)}
-                            >
-                                <Link2 size={15} />
-                                Share
-                            </button>
-                        ) : null}
-                        {canManage && editable ? (
-                            <button type="button" className={primaryActionClass} disabled={busy} onClick={save}>
-                                {isNew ? 'Create' : 'Save'}
-                            </button>
-                        ) : null}
-                    </div>
-                }
-            />
+            <Link
+                to="/clients/quotations"
+                className="inline-flex items-center gap-1.5 text-sm text-ink/60 transition hover:text-royal"
+            >
+                <ArrowLeft size={14} strokeWidth={1.75} aria-hidden />
+                Quotations
+            </Link>
 
-            <div className="mt-6 max-w-4xl space-y-5">
+            <div className="mt-4">
+                <PageHeader
+                    eyebrow="Quotations"
+                    title={isNew ? 'New quotation' : quote!.number}
+                    description={
+                        isNew
+                            ? 'Create a customer-specific quote with services, packages, and optional items.'
+                            : `${STATUS_LABELS[quote!.status]} · ${quote!.customer?.displayName ?? 'Customer'}`
+                    }
+                    actions={
+                        <div className="flex flex-wrap items-center gap-2">
+                            {!isNew && canManage ? (
+                                <button
+                                    type="button"
+                                    className={ghostActionClass}
+                                    disabled={busy}
+                                    onClick={() =>
+                                        generatePdf.mutate(quote!.id, {
+                                            onSuccess: (result) => {
+                                                void downloadQuotationPdf(
+                                                    result.quotation.id,
+                                                    `${result.quotation.number}.pdf`,
+                                                )
+                                                    .then(() =>
+                                                        setNotice({
+                                                            tone: 'ok',
+                                                            text: 'PDF ready and downloading',
+                                                        }),
+                                                    )
+                                                    .catch((err: Error) =>
+                                                        setNotice({ tone: 'error', text: err.message }),
+                                                    )
+                                            },
+                                            onError: (err) => setNotice({ tone: 'error', text: err.message }),
+                                        })
+                                    }
+                                >
+                                    <Download size={15} />
+                                    {generatePdf.isPending ? 'Preparing PDF…' : 'Download PDF'}
+                                </button>
+                            ) : null}
+                            {!isNew && canShare && quote && quote.status !== 'DRAFT' ? (
+                                <button
+                                    type="button"
+                                    className={ghostActionClass}
+                                    onClick={() => setShareOpen(true)}
+                                >
+                                    <Link2 size={15} />
+                                    Share
+                                </button>
+                            ) : null}
+                            {showPrimary ? (
+                                <button
+                                    type="button"
+                                    className={primaryActionClass}
+                                    disabled={busy}
+                                    onClick={save}
+                                >
+                                    {primaryLabel}
+                                </button>
+                            ) : null}
+                        </div>
+                    }
+                />
+            </div>
+
+            <div className="mt-5 max-w-6xl space-y-4">
                 <Notice notice={notice} />
 
                 {!isNew && canManage ? (
                     <div className="flex flex-wrap gap-2">
                         {quote!.status === 'DRAFT' ? (
-                            <button
-                                type="button"
-                                className={ghostActionClass}
-                                disabled={busy}
-                                onClick={() =>
-                                    changeStatus.mutate(
-                                        { id: quote!.id, action: 'send' },
-                                        {
-                                            onSuccess: () => setNotice({ tone: 'ok', text: 'Marked as sent' }),
-                                            onError: (err) => setNotice({ tone: 'error', text: err.message }),
-                                        },
-                                    )
-                                }
-                            >
-                                Mark sent
-                            </button>
+                            <>
+                                <button
+                                    type="button"
+                                    className={primaryActionClass}
+                                    disabled={busy}
+                                    onClick={handleSendEmail}
+                                >
+                                    <Mail size={15} />
+                                    {sendEmail.isPending ? 'Sending…' : 'Send email'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className={ghostActionClass}
+                                    disabled={busy}
+                                    onClick={() =>
+                                        changeStatus.mutate(
+                                            { id: quote!.id, action: 'send' },
+                                            {
+                                                onSuccess: () =>
+                                                    setNotice({ tone: 'ok', text: 'Marked as sent' }),
+                                                onError: (err) =>
+                                                    setNotice({ tone: 'error', text: err.message }),
+                                            },
+                                        )
+                                    }
+                                >
+                                    Mark sent
+                                </button>
+                            </>
                         ) : null}
                         {quote!.status === 'SENT' ? (
                             <>
+                                <button
+                                    type="button"
+                                    className={ghostActionClass}
+                                    disabled={busy}
+                                    onClick={handleSendEmail}
+                                >
+                                    <Mail size={15} />
+                                    {sendEmail.isPending ? 'Sending…' : 'Resend email'}
+                                </button>
                                 <button
                                     type="button"
                                     className={ghostActionClass}
@@ -412,7 +565,7 @@ export default function QuotationEditor() {
                         {quote!.status === 'DRAFT' ? (
                             <button
                                 type="button"
-                                className={`${ghostActionClass} text-red-800`}
+                                className={`${ghostActionClass} text-red-600`}
                                 disabled={busy}
                                 onClick={() =>
                                     remove.mutate(quote!.id, {
@@ -424,85 +577,87 @@ export default function QuotationEditor() {
                                 Delete draft
                             </button>
                         ) : null}
-                        {quote?.booking ? (
-                            <p className="w-full text-sm text-ink/60">
-                                Linked booking: {quote.booking.id} · {quote.booking.status} ·{' '}
-                                {quote.booking.total}
-                            </p>
-                        ) : null}
                     </div>
                 ) : null}
 
-                <div className="space-y-4 rounded-[3px] border border-royal/10 bg-white/70 p-5">
-                    {isNew ? (
+                {!editable && quote ? (
+                    <QuotationReadonlyView quotation={quote} />
+                ) : (
+                <>
+                <div
+                    ref={customerSectionRef}
+                    className="admin-panel grid gap-5 rounded-[3px] p-4 lg:grid-cols-2"
+                >
+                    <div className="space-y-3">
+                        {(isNew || selectedCustomer) && (
+                            <div>
+                                <span className={labelClass}>Customer</span>
+                                <CustomerPicker
+                                    value={customerUserId}
+                                    selected={selectedCustomer}
+                                    onChange={handleCustomerChange}
+                                    invalid={attempted && Boolean(errors.customer)}
+                                    disabled={!canManage || !editable}
+                                    readOnly={!isNew}
+                                />
+                                {attempted && errors.customer ? (
+                                    <p className="mt-1 text-xs text-red-600">{errors.customer}</p>
+                                ) : null}
+                            </div>
+                        )}
                         <label className="block">
-                            <span className={labelClass}>Customer</span>
-                            <input
-                                className={fieldClass}
-                                placeholder="Search customers by name or email"
-                                value={customerQ}
-                                onChange={(event) => setCustomerQ(event.target.value)}
-                            />
-                            <select
-                                className={`${selectClass} mt-2 w-full px-2`}
-                                value={customerUserId}
-                                onChange={(event) => setCustomerUserId(event.target.value)}
-                            >
-                                <option value="">Select customer…</option>
-                                {(customersData?.items ?? []).map((user) => (
-                                    <option key={user.id} value={user.id}>
-                                        {[user.firstName, user.lastName].filter(Boolean).join(' ') ||
-                                            user.email ||
-                                            user.id}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
-                    ) : null}
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="block sm:col-span-2">
                             <span className={labelClass}>Title</span>
                             <input
-                                className={fieldClass}
+                                ref={titleRef}
+                                className={`${fieldClass} ${invalidFieldClass(attempted && Boolean(errors.title))}`}
                                 value={title}
                                 disabled={!canManage || !editable}
-                                onChange={(event) => setTitle(event.target.value)}
+                                aria-invalid={attempted && Boolean(errors.title) ? true : undefined}
+                                onChange={(event) => {
+                                    setTitle(event.target.value)
+                                    setErrors((prev) => ({ ...prev, title: undefined }))
+                                }}
                             />
+                            {attempted && errors.title ? (
+                                <p className="mt-1 text-xs text-red-600">{errors.title}</p>
+                            ) : null}
                         </label>
-                        <label className="block">
-                            <span className={labelClass}>Currency</span>
-                            <select
-                                className={`${selectClass} w-full px-2`}
-                                value={currency}
-                                disabled={!canManage || !editable}
-                                onChange={(event) => setCurrency(event.target.value)}
-                            >
-                                <option value="PHP">PHP</option>
-                                <option value="USD">USD</option>
-                            </select>
-                        </label>
-                        <label className="block">
-                            <span className={labelClass}>Valid until</span>
-                            <input
-                                type="date"
-                                className={fieldClass}
-                                value={validUntil}
-                                disabled={!canManage || !editable}
-                                onChange={(event) => setValidUntil(event.target.value)}
-                            />
-                        </label>
-                        <label className="block sm:col-span-2">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <span className={labelClass}>Currency</span>
+                                <SelectMenu
+                                    value={currency}
+                                    options={[...CURRENCY_OPTIONS]}
+                                    disabled={!canManage || !editable}
+                                    aria-label="Currency"
+                                    onChange={setCurrency}
+                                />
+                            </div>
+                            <label className="block">
+                                <span className={labelClass}>Valid until</span>
+                                <input
+                                    type="date"
+                                    className={fieldClass}
+                                    value={validUntil}
+                                    disabled={!canManage || !editable}
+                                    onChange={(event) => setValidUntil(event.target.value)}
+                                />
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="flex min-h-0 flex-col gap-3">
+                        <label className="flex min-h-0 flex-1 flex-col">
                             <span className={labelClass}>Message to customer</span>
                             <textarea
-                                className={fieldClass}
-                                rows={3}
+                                className={`${fieldClass} min-h-[88px] flex-1 resize-y`}
+                                rows={4}
                                 value={customerMessage}
                                 disabled={!canManage || !editable}
                                 onChange={(event) => setCustomerMessage(event.target.value)}
                             />
                         </label>
-                        <label className="block sm:col-span-2">
+                        <label className="block">
                             <span className={labelClass}>Internal notes</span>
                             <textarea
                                 className={fieldClass}
@@ -515,196 +670,268 @@ export default function QuotationEditor() {
                     </div>
                 </div>
 
-                <div className="space-y-3 rounded-[3px] border border-royal/10 bg-white/70 p-5">
-                    <div className="flex items-center justify-between gap-3">
-                        <h2 className="text-sm font-medium text-royal">Line items</h2>
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+                    <div className="admin-panel space-y-3 rounded-[3px] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 className="text-sm font-medium text-ink">Line items</h2>
+                                <p className="text-xs text-ink/45">Services, packages, and optional add-ons</p>
+                            </div>
+                            {canManage && editable ? (
+                                <button
+                                    type="button"
+                                    className={ghostActionClass}
+                                    onClick={() => setItems((prev) => [...prev, emptyItem()])}
+                                >
+                                    <Plus size={15} />
+                                    Add item
+                                </button>
+                            ) : null}
+                        </div>
+
+                        {attempted && errors.items ? (
+                            <p className="text-xs text-red-600">{errors.items}</p>
+                        ) : null}
+
+                        <div className="space-y-3">
+                            {items.map((item, index) => {
+                                const titleInvalid = attempted && Boolean(errors.itemTitles?.[item.key])
+                                const unitInvalid = attempted && Boolean(errors.itemUnits?.[item.key])
+                                const qtyInvalid = attempted && Boolean(errors.itemQuantities?.[item.key])
+                                const unitCents = parseUnitMajor(item.unitMajor)
+                                const lineCents =
+                                    unitCents != null ? unitCents * Math.max(1, item.quantity) : null
+
+                                return (
+                                    <div
+                                        key={item.key}
+                                        className="rounded-[3px] border border-admin-border bg-admin-bg/40 p-3.5"
+                                    >
+                                        <div className="mb-3 flex items-start justify-between gap-3">
+                                            <div className="flex min-w-0 items-center gap-2">
+                                                <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-[3px] bg-royal/10 px-1.5 text-[11px] font-medium tabular-nums text-royal">
+                                                    #{index + 1}
+                                                </span>
+                                                <SelectMenu
+                                                    value={item.kind}
+                                                    options={KIND_OPTIONS}
+                                                    disabled={!canManage || !editable}
+                                                    aria-label={`Item ${index + 1} kind`}
+                                                    className="w-[140px]"
+                                                    onChange={(kind) =>
+                                                        setItems((prev) =>
+                                                            prev.map((row, i) =>
+                                                                i === index
+                                                                    ? {
+                                                                          ...row,
+                                                                          kind,
+                                                                          isOptional:
+                                                                              kind === 'OPTIONAL'
+                                                                                  ? true
+                                                                                  : row.isOptional,
+                                                                      }
+                                                                    : row,
+                                                            ),
+                                                        )
+                                                    }
+                                                />
+                                            </div>
+                                            {canManage && editable && items.length > 1 ? (
+                                                <button
+                                                    type="button"
+                                                    className="rounded-[3px] p-1.5 text-ink/40 transition hover:bg-royal/[0.06] hover:text-red-600"
+                                                    aria-label={`Remove item ${index + 1}`}
+                                                    onClick={() =>
+                                                        setItems((prev) => prev.filter((_, i) => i !== index))
+                                                    }
+                                                >
+                                                    <Trash2 size={15} />
+                                                </button>
+                                            ) : null}
+                                        </div>
+
+                                        <label className="block">
+                                            <span className={labelClass}>Title</span>
+                                            <input
+                                                ref={index === 0 ? firstItemTitleRef : undefined}
+                                                className={`${fieldClass} ${invalidFieldClass(titleInvalid)}`}
+                                                value={item.title}
+                                                disabled={!canManage || !editable}
+                                                aria-invalid={titleInvalid || undefined}
+                                                onChange={(event) =>
+                                                    setItems((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === index
+                                                                ? { ...row, title: event.target.value }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                            {titleInvalid ? (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {errors.itemTitles?.[item.key]}
+                                                </p>
+                                            ) : null}
+                                        </label>
+
+                                        <label className="mt-3 block">
+                                            <span className={labelClass}>Description</span>
+                                            <input
+                                                className={fieldClass}
+                                                value={item.description}
+                                                disabled={!canManage || !editable}
+                                                placeholder="Optional details for this line"
+                                                onChange={(event) =>
+                                                    setItems((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === index
+                                                                ? { ...row, description: event.target.value }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </label>
+
+                                        <div className="mt-3 grid gap-3 sm:grid-cols-[100px_1fr_120px]">
+                                            <label className="block">
+                                                <span className={labelClass}>Qty</span>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    className={`${fieldClass} ${invalidFieldClass(qtyInvalid)}`}
+                                                    value={item.quantity}
+                                                    disabled={!canManage || !editable}
+                                                    aria-invalid={qtyInvalid || undefined}
+                                                    onChange={(event) =>
+                                                        setItems((prev) =>
+                                                            prev.map((row, i) =>
+                                                                i === index
+                                                                    ? {
+                                                                          ...row,
+                                                                          quantity: Math.max(
+                                                                              1,
+                                                                              Number(event.target.value) || 1,
+                                                                          ),
+                                                                      }
+                                                                    : row,
+                                                            ),
+                                                        )
+                                                    }
+                                                />
+                                            </label>
+                                            <label className="block">
+                                                <span className={labelClass}>Unit ({currency})</span>
+                                                <input
+                                                    className={`${fieldClass} ${invalidFieldClass(unitInvalid)}`}
+                                                    value={item.unitMajor}
+                                                    disabled={!canManage || !editable}
+                                                    inputMode="decimal"
+                                                    aria-invalid={unitInvalid || undefined}
+                                                    onChange={(event) =>
+                                                        setItems((prev) =>
+                                                            prev.map((row, i) =>
+                                                                i === index
+                                                                    ? { ...row, unitMajor: event.target.value }
+                                                                    : row,
+                                                            ),
+                                                        )
+                                                    }
+                                                />
+                                                {unitInvalid ? (
+                                                    <p className="mt-1 text-xs text-red-600">
+                                                        {errors.itemUnits?.[item.key]}
+                                                    </p>
+                                                ) : null}
+                                            </label>
+                                            <div className="block">
+                                                <span className={labelClass}>Line total</span>
+                                                <div className="flex h-[38px] items-center justify-end rounded-[3px] border border-transparent px-1 text-sm font-medium tabular-nums text-ink">
+                                                    {lineCents != null
+                                                        ? totals.format(lineCents)
+                                                        : '—'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 flex flex-wrap gap-2 border-t border-admin-border/80 pt-3">
+                                            <CapsuleToggle
+                                                label="Optional"
+                                                checked={item.isOptional}
+                                                disabled={!canManage || !editable}
+                                                onChange={(isOptional) =>
+                                                    setItems((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === index ? { ...row, isOptional } : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                            <CapsuleToggle
+                                                label="Selected"
+                                                checked={item.selected}
+                                                disabled={!canManage || !editable}
+                                                onChange={(selected) =>
+                                                    setItems((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === index ? { ...row, selected } : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
                         {canManage && editable ? (
                             <button
                                 type="button"
-                                className={ghostActionClass}
+                                className={`${ghostActionClass} w-full justify-center`}
                                 onClick={() => setItems((prev) => [...prev, emptyItem()])}
                             >
                                 <Plus size={15} />
-                                Add item
+                                Add another item
                             </button>
                         ) : null}
                     </div>
 
-                    <div className="space-y-3">
-                        {items.map((item, index) => (
-                            <div
-                                key={item.key}
-                                className="grid gap-2 rounded-[3px] border border-royal/10 p-3 sm:grid-cols-12"
-                            >
-                                <label className="block sm:col-span-2">
-                                    <span className={labelClass}>Kind</span>
-                                    <select
-                                        className={`${selectClass} w-full px-2`}
-                                        value={item.kind}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) => {
-                                            const kind = event.target.value as QuotationItemKind
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index
-                                                        ? {
-                                                              ...row,
-                                                              kind,
-                                                              isOptional:
-                                                                  kind === 'OPTIONAL' ? true : row.isOptional,
-                                                          }
-                                                        : row,
-                                                ),
-                                            )
-                                        }}
-                                    >
-                                        {(Object.keys(KIND_LABELS) as QuotationItemKind[]).map((kind) => (
-                                            <option key={kind} value={kind}>
-                                                {KIND_LABELS[kind]}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <label className="block sm:col-span-4">
-                                    <span className={labelClass}>Title</span>
-                                    <input
-                                        className={fieldClass}
-                                        value={item.title}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) =>
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index ? { ...row, title: event.target.value } : row,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                </label>
-                                <label className="block sm:col-span-2">
-                                    <span className={labelClass}>Qty</span>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        className={fieldClass}
-                                        value={item.quantity}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) =>
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index
-                                                        ? {
-                                                              ...row,
-                                                              quantity: Math.max(
-                                                                  1,
-                                                                  Number(event.target.value) || 1,
-                                                              ),
-                                                          }
-                                                        : row,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                </label>
-                                <label className="block sm:col-span-3">
-                                    <span className={labelClass}>Unit ({currency})</span>
-                                    <input
-                                        className={fieldClass}
-                                        value={item.unitMajor}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) =>
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index
-                                                        ? { ...row, unitMajor: event.target.value }
-                                                        : row,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                </label>
-                                <div className="flex items-end justify-end sm:col-span-1">
-                                    {canManage && editable && items.length > 1 ? (
-                                        <button
-                                            type="button"
-                                            className="pb-2 text-red-800"
-                                            onClick={() =>
-                                                setItems((prev) => prev.filter((_, i) => i !== index))
-                                            }
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    ) : null}
-                                </div>
-                                <label className="block sm:col-span-8">
-                                    <span className={labelClass}>Description</span>
-                                    <input
-                                        className={fieldClass}
-                                        value={item.description}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) =>
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index
-                                                        ? { ...row, description: event.target.value }
-                                                        : row,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                </label>
-                                <label className="flex items-center gap-2 self-end pb-2 text-sm text-ink/70 sm:col-span-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={item.isOptional}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) =>
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index
-                                                        ? { ...row, isOptional: event.target.checked }
-                                                        : row,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                    Optional
-                                </label>
-                                <label className="flex items-center gap-2 self-end pb-2 text-sm text-ink/70 sm:col-span-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={item.selected}
-                                        disabled={!canManage || !editable}
-                                        onChange={(event) =>
-                                            setItems((prev) =>
-                                                prev.map((row, i) =>
-                                                    i === index
-                                                        ? { ...row, selected: event.target.checked }
-                                                        : row,
-                                                ),
-                                            )
-                                        }
-                                    />
-                                    Selected
-                                </label>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="border-t border-royal/10 pt-3 text-sm text-ink/75">
-                        <div className="flex justify-between">
+                    <aside className="admin-panel sticky top-4 space-y-2 rounded-[3px] p-4 text-sm">
+                        <h2 className="text-xs font-medium uppercase tracking-wide text-ink/45">Totals</h2>
+                        <div className="flex justify-between gap-3 text-ink/75">
                             <span>Subtotal</span>
                             <span className="tabular-nums">{totals.format(totals.subtotal)}</span>
                         </div>
-                        <div className="mt-1 flex justify-between">
-                            <span>Optional (selected)</span>
+                        <div className="flex justify-between gap-3 text-ink/75">
+                            <span>Optional</span>
                             <span className="tabular-nums">{totals.format(totals.optional)}</span>
                         </div>
-                        <div className="mt-2 flex justify-between text-base font-medium text-royal">
+                        <div className="flex justify-between gap-3 border-t border-admin-border pt-2 text-base font-medium text-ink">
                             <span>Total</span>
-                            <span className="tabular-nums">{totals.format(totals.total)}</span>
+                            <span className="tabular-nums text-royal">{totals.format(totals.total)}</span>
                         </div>
-                    </div>
+                    </aside>
                 </div>
+                </>
+                )}
+
+                {showPrimary ? (
+                    <div className="flex flex-wrap items-center justify-end gap-2 border-t border-admin-border pt-4">
+                        <Link to="/clients/quotations" className={ghostActionClass}>
+                            Cancel
+                        </Link>
+                        <button
+                            type="button"
+                            className={primaryActionClass}
+                            disabled={busy}
+                            onClick={save}
+                        >
+                            {primaryLabel}
+                        </button>
+                    </div>
+                ) : null}
             </div>
 
             <QuotationShareDialog
