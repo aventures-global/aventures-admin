@@ -1,7 +1,7 @@
 import { api } from './api'
 import type { Booking, BookingPaymentStatus } from './bookingService'
 
-export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'GCASH' | 'MAYA' | 'CARD' | 'OTHER'
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'GCASH' | 'MAYA' | 'CARD' | 'STRIPE' | 'OTHER'
 
 export type PaymentPerson = {
     id: string
@@ -98,8 +98,14 @@ export const METHOD_LABELS: Record<PaymentMethod, string> = {
     GCASH: 'GCash',
     MAYA: 'Maya',
     CARD: 'Card',
+    STRIPE: 'Stripe',
     OTHER: 'Other',
 }
+
+/** Manual recording only — Stripe payments are created by Checkout webhooks. */
+export const MANUAL_PAYMENT_METHODS = (
+    Object.keys(METHOD_LABELS) as PaymentMethod[]
+).filter((method) => method !== 'STRIPE')
 
 export function listPayments(params: PaymentListParams = {}) {
     return api

@@ -14,6 +14,7 @@ import {
     centsFromMajor,
     METHOD_LABELS,
     majorFromCents,
+    MANUAL_PAYMENT_METHODS,
     type PaymentMethod,
 } from '../../services/paymentService'
 
@@ -172,12 +173,10 @@ export default function PaymentEditor() {
                                             aria-label="Payment method"
                                             disabled={busy}
                                             onChange={setMethod}
-                                            options={(Object.keys(METHOD_LABELS) as PaymentMethod[]).map(
-                                                (value) => ({
-                                                    value,
-                                                    label: METHOD_LABELS[value],
-                                                }),
-                                            )}
+                                            options={MANUAL_PAYMENT_METHODS.map((value) => ({
+                                                value,
+                                                label: METHOD_LABELS[value],
+                                            }))}
                                         />
                                     </div>
                                     <div>

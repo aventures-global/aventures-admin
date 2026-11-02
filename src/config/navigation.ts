@@ -249,7 +249,7 @@ export const navGroups: NavGroup[] = [
                     'Amount paid, remaining balance, and payment status',
                     'Transaction history and payment notes',
                     'Basic payment reports',
-                    'Tracking only; online payment is a separate integration',
+                    'Customers can pay remaining balances via Stripe on shared quotations',
                 ],
                 element: Payments,
                 routes: [
