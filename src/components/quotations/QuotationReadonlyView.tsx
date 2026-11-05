@@ -6,7 +6,6 @@ import { ghostActionClass } from '../../lib/formStyles'
 import {
     KIND_LABELS,
     STATUS_LABELS,
-    majorFromCents,
     type Quotation,
     type QuotationStatus,
 } from '../../services/quotationService'
@@ -20,7 +19,21 @@ function statusTone(status: QuotationStatus): StatusTone {
 }
 
 function formatMoney(cents: number, currency: string) {
-    return currency === 'USD' ? `$${Math.round(cents / 100)}` : `${majorFromCents(cents)} ${currency}`
+    const code = currency.trim().toUpperCase() || 'USD'
+    const amount = cents / 100
+    try {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: code,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(amount)
+    } catch {
+        return `${amount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })} ${code}`
+    }
 }
 
 function formatDate(value: string | null | undefined) {

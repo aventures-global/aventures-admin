@@ -26,6 +26,7 @@ export type AppUser = {
     lastName: string | null
     phone: string | null
     profilePicture: string | null
+    preferredCurrency: 'USD' | 'PHP'
     role: AppUserRole
     createdAt: string
     updatedAt: string

@@ -153,7 +153,7 @@ export default function PaymentEditor() {
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className={labelClass} htmlFor="amount">
-                                            Amount ({selectedBooking?.currency ?? 'PHP'})
+                                            Amount ({selectedBooking?.currency ?? 'USD'})
                                         </label>
                                         <input
                                             id="amount"

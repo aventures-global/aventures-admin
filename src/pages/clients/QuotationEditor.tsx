@@ -112,19 +112,31 @@ function liveTotals(items: DraftItem[], currency: string) {
     const optional = included
         .filter((item) => item.isOptional || item.kind === 'OPTIONAL')
         .reduce((sum, item) => sum + item.quantity * item.unitCents, 0)
-    const format = (cents: number) =>
-        currency === 'USD' ? `$${Math.round(cents / 100)}` : `${(cents / 100).toFixed(2)} ${currency}`
+    const format = (cents: number) => formatMoney(cents, currency)
     return { subtotal, optional, total: subtotal + optional, format }
+}
+
+function formatMoney(cents: number, currency: string) {
+    const code = currency.trim().toUpperCase() || 'USD'
+    const amount = cents / 100
+    try {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: code,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(amount)
+    } catch {
+        return `${amount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })} ${code}`
+    }
 }
 
 function invalidFieldClass(invalid: boolean) {
     return invalid ? 'border-red-500 focus:border-red-500' : ''
 }
-
-const CURRENCY_OPTIONS = [
-    { value: 'PHP', label: 'PHP' },
-    { value: 'USD', label: 'USD' },
-] as const
 
 const KIND_OPTIONS = (Object.keys(KIND_LABELS) as QuotationItemKind[]).map((kind) => ({
     value: kind,
@@ -188,7 +200,7 @@ export default function QuotationEditor() {
     const [customerUserId, setCustomerUserId] = useState(searchParams.get('customer') ?? '')
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerOption | null>(null)
     const [title, setTitle] = useState('')
-    const [currency, setCurrency] = useState('PHP')
+    const currency = 'USD'
     const [notes, setNotes] = useState('')
     const [customerMessage, setCustomerMessage] = useState('')
     const [validUntil, setValidUntil] = useState('')
@@ -215,7 +227,6 @@ export default function QuotationEditor() {
         setCustomerUserId(quote.customer?.id ?? '')
         setSelectedCustomer(personFromQuote(quote))
         setTitle(quote.title)
-        setCurrency(quote.currency)
         setNotes(quote.notes ?? '')
         setCustomerMessage(quote.customerMessage ?? '')
         setValidUntil(quote.validUntil ? quote.validUntil.slice(0, 10) : '')
@@ -625,13 +636,10 @@ export default function QuotationEditor() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <span className={labelClass}>Currency</span>
-                                <SelectMenu
-                                    value={currency}
-                                    options={[...CURRENCY_OPTIONS]}
-                                    disabled={!canManage || !editable}
-                                    aria-label="Currency"
-                                    onChange={setCurrency}
-                                />
+                                <p className={`${fieldClass} flex items-center text-ink/70`}>USD</p>
+                                <p className="mt-1 text-[11px] text-ink/45">
+                                    Quotes are priced in USD. PHP is shown on the PDF when the customer prefers it.
+                                </p>
                             </div>
                             <label className="block">
                                 <span className={labelClass}>Valid until</span>

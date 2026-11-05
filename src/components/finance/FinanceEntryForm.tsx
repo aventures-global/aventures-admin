@@ -38,7 +38,7 @@ export default function FinanceEntryForm({
     const [type, setType] = useState<FinanceEntryType>('EXPENSE')
     const [categoryId, setCategoryId] = useState('')
     const [amount, setAmount] = useState('')
-    const [currency, setCurrency] = useState('PHP')
+    const [currency, setCurrency] = useState('USD')
     const [occurredAt, setOccurredAt] = useState(todayInputValue())
     const [description, setDescription] = useState('')
     const [notes, setNotes] = useState('')
@@ -125,8 +125,8 @@ export default function FinanceEntryForm({
                         disabled={busy}
                         onChange={setCurrency}
                         options={[
-                            { value: 'PHP', label: 'PHP' },
                             { value: 'USD', label: 'USD' },
+                            { value: 'PHP', label: 'PHP' },
                         ]}
                     />
                 </div>
