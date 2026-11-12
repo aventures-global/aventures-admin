@@ -75,12 +75,20 @@ export default function PaymentDetail() {
                     <section className="admin-panel grid gap-4 rounded-[3px] p-5 sm:grid-cols-2">
                         <div>
                             <p className="text-xs uppercase tracking-wide text-ink/45">Customer</p>
-                            <Link
-                                to={`/clients/customers/${payment.customerUserId}`}
-                                className="mt-1 block text-sm font-medium text-royal hover:underline"
-                            >
-                                {payment.customer?.displayName ?? 'Customer'}
-                            </Link>
+                            {payment.customerUserId ? (
+                                <Link
+                                    to={`/clients/customers/${payment.customerUserId}`}
+                                    className="mt-1 block text-sm font-medium text-royal hover:underline"
+                                >
+                                    {payment.customer?.displayName ?? 'Customer'}
+                                </Link>
+                            ) : (
+                                <p className="mt-1 text-sm font-medium text-ink">
+                                    {payment.booking.quotation?.customerName ||
+                                        payment.booking.quotation?.customerEmail ||
+                                        'Guest'}
+                                </p>
+                            )}
                         </div>
                         <div>
                             <p className="text-xs uppercase tracking-wide text-ink/45">Booking balance</p>

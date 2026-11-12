@@ -28,7 +28,7 @@ export type FinanceEntry = {
     payment: {
         id: string
         bookingId: string
-        customerUserId: string
+        customerUserId: string | null
         amountCents: number
         voidedAt: string | null
     } | null

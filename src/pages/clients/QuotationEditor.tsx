@@ -1,10 +1,11 @@
-import { ArrowLeft, Download, Link2, Mail, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, Link2, Mail, Plus, Trash2, Upload } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Notice from '../../components/cms/faqs/Notice'
 import CustomerPicker, {
     type CustomerOption,
 } from '../../components/quotations/CustomerPicker'
+import ImportInquiryDialog from '../../components/quotations/ImportInquiryDialog'
 import QuotationReadonlyView from '../../components/quotations/QuotationReadonlyView'
 import QuotationShareDialog from '../../components/quotations/QuotationShareDialog'
 import SelectMenu from '../../components/ui/SelectMenu'
@@ -21,12 +22,16 @@ import {
     useUpdateQuotation,
 } from '../../hooks/useQuotations'
 import { useAuth } from '../../lib/authContext'
+import { readInquiryAttachmentFile } from '../../lib/inquiryImport'
 import {
     fieldClass,
     ghostActionClass,
     labelClass,
     primaryActionClass,
+    segmentActiveClass,
+    segmentGroupClass,
 } from '../../lib/formStyles'
+import { listAdminUsers } from '../../services/adminUserService'
 import {
     KIND_LABELS,
     STATUS_LABELS,
@@ -37,6 +42,7 @@ import {
     type QuotationItemKind,
     type QuotationItemInput,
 } from '../../services/quotationService'
+import type { AppUser } from '../../services/userService'
 
 type DraftItem = {
     key: string
@@ -51,11 +57,17 @@ type DraftItem = {
 
 type FieldErrors = {
     customer?: string
+    customerName?: string
+    customerEmail?: string
     title?: string
     items?: string
     itemTitles?: Record<string, string>
     itemUnits?: Record<string, string>
     itemQuantities?: Record<string, string>
+}
+
+function looksLikeEmail(value: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
 }
 
 function emptyItem(kind: QuotationItemKind = 'SERVICE'): DraftItem {
@@ -184,6 +196,39 @@ function personFromQuote(quote: Quotation | undefined): CustomerOption | null {
     }
 }
 
+function customerOptionFromUser(user: AppUser): CustomerOption {
+    const displayName =
+        [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email || user.id
+    return {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profilePicture: user.profilePicture,
+        displayName,
+    }
+}
+
+function contactLabel(quote: Pick<Quotation, 'customer' | 'customerName' | 'customerEmail'>) {
+    return quote.customer?.displayName || quote.customerName || quote.customerEmail || '—'
+}
+
+async function findRegisteredCustomerByEmail(email: string): Promise<CustomerOption | null> {
+    const page = await listAdminUsers({
+        q: email,
+        scope: 'customers',
+        role: 'all',
+        sort: 'email',
+        dir: 'asc',
+        page: 1,
+        limit: 8,
+    })
+    const match = page.items.find(
+        (user) => user.email?.trim().toLowerCase() === email.trim().toLowerCase(),
+    )
+    return match ? customerOptionFromUser(match) : null
+}
+
 export default function QuotationEditor() {
     const { id } = useParams()
     const isNew = !id || id === 'new'
@@ -199,10 +244,14 @@ export default function QuotationEditor() {
 
     const [customerUserId, setCustomerUserId] = useState(searchParams.get('customer') ?? '')
     const [selectedCustomer, setSelectedCustomer] = useState<CustomerOption | null>(null)
+    const [unregisteredMode, setUnregisteredMode] = useState(false)
+    const [customerName, setCustomerName] = useState('')
+    const [customerEmail, setCustomerEmail] = useState('')
     const [title, setTitle] = useState('')
     const currency = 'USD'
     const [notes, setNotes] = useState('')
     const [customerMessage, setCustomerMessage] = useState('')
+    const [messageTab, setMessageTab] = useState<'message' | 'notes'>('message')
     const [validUntil, setValidUntil] = useState('')
     const [items, setItems] = useState<DraftItem[]>([emptyItem()])
     const [shareOpen, setShareOpen] = useState(false)
@@ -213,6 +262,9 @@ export default function QuotationEditor() {
     const titleRef = useRef<HTMLInputElement>(null)
     const customerSectionRef = useRef<HTMLDivElement>(null)
     const firstItemTitleRef = useRef<HTMLInputElement>(null)
+    const [importOpen, setImportOpen] = useState(false)
+    const [importingInquiry, setImportingInquiry] = useState(false)
+    const [importError, setImportError] = useState<string | null>(null)
 
     const create = useCreateQuotation()
     const update = useUpdateQuotation()
@@ -226,6 +278,10 @@ export default function QuotationEditor() {
         if (!quote) return
         setCustomerUserId(quote.customer?.id ?? '')
         setSelectedCustomer(personFromQuote(quote))
+        const unclaimed = !quote.accountLinked
+        setUnregisteredMode(unclaimed)
+        setCustomerName(quote.customerName ?? '')
+        setCustomerEmail(quote.customerEmail ?? '')
         setTitle(quote.title)
         setNotes(quote.notes ?? '')
         setCustomerMessage(quote.customerMessage ?? '')
@@ -236,8 +292,100 @@ export default function QuotationEditor() {
     const handleCustomerChange = useCallback((next: CustomerOption | null) => {
         setSelectedCustomer(next)
         setCustomerUserId(next?.id ?? '')
-        setErrors((prev) => ({ ...prev, customer: undefined }))
+        setUnregisteredMode(false)
+        setCustomerName('')
+        setCustomerEmail('')
+        setErrors((prev) => ({
+            ...prev,
+            customer: undefined,
+            customerName: undefined,
+            customerEmail: undefined,
+        }))
     }, [])
+
+    const handleQuoteUnregistered = useCallback((searchText: string) => {
+        setSelectedCustomer(null)
+        setCustomerUserId('')
+        setUnregisteredMode(true)
+        if (looksLikeEmail(searchText)) {
+            setCustomerEmail(searchText.trim().toLowerCase())
+            setCustomerName('')
+        } else {
+            setCustomerName(searchText.trim())
+            setCustomerEmail('')
+        }
+        setErrors((prev) => ({
+            ...prev,
+            customer: undefined,
+            customerName: undefined,
+            customerEmail: undefined,
+        }))
+    }, [])
+
+    const clearUnregistered = useCallback(() => {
+        setUnregisteredMode(false)
+        setCustomerName('')
+        setCustomerEmail('')
+        setErrors((prev) => ({
+            ...prev,
+            customer: undefined,
+            customerName: undefined,
+            customerEmail: undefined,
+        }))
+    }, [])
+
+    const applyInquiryImport = useCallback(
+        async (file: File) => {
+            setImportingInquiry(true)
+            setImportError(null)
+            try {
+                const draft = await readInquiryAttachmentFile(file)
+                const registered = await findRegisteredCustomerByEmail(draft.customerEmail)
+
+                if (registered) {
+                    setSelectedCustomer(registered)
+                    setCustomerUserId(registered.id)
+                    setUnregisteredMode(false)
+                    setCustomerName('')
+                    setCustomerEmail('')
+                } else {
+                    setSelectedCustomer(null)
+                    setCustomerUserId('')
+                    setUnregisteredMode(true)
+                    setCustomerName(draft.customerName)
+                    setCustomerEmail(draft.customerEmail)
+                }
+
+                setTitle(draft.title)
+                setNotes(draft.notes)
+                setMessageTab('notes')
+                setErrors((prev) => ({
+                    ...prev,
+                    customer: undefined,
+                    customerName: undefined,
+                    customerEmail: undefined,
+                    title: undefined,
+                }))
+                setImportOpen(false)
+                setNotice({
+                    tone: 'ok',
+                    text: registered
+                        ? `Inquiry imported and linked to ${registered.displayName}. Review the draft, add priced line items, then save.`
+                        : 'Inquiry imported for an unregistered customer. Review the draft, add priced line items, then save.',
+                })
+                customerSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            } catch (err) {
+                setImportError(
+                    err instanceof Error ? err.message : 'Could not import this inquiry file',
+                )
+            } finally {
+                setImportingInquiry(false)
+            }
+        },
+        [setNotice],
+    )
+
+    const contactEditable = isNew || (quote?.status === 'DRAFT' && !quote.accountLinked)
 
     const totals = useMemo(() => liveTotals(items, currency), [items, currency])
     const editable = isNew || quote?.status === 'DRAFT' || quote?.status === 'SENT'
@@ -267,7 +415,15 @@ export default function QuotationEditor() {
 
     const validate = (): FieldErrors => {
         const next: FieldErrors = {}
-        if (isNew && !customerUserId) next.customer = 'Select a customer'
+        if (isNew || contactEditable) {
+            if (unregisteredMode) {
+                if (!customerName.trim()) next.customerName = 'Customer name is required'
+                if (!customerEmail.trim()) next.customerEmail = 'Customer email is required'
+                else if (!looksLikeEmail(customerEmail)) next.customerEmail = 'Enter a valid email'
+            } else if (!customerUserId) {
+                next.customer = 'Select a customer or quote an unregistered customer'
+            }
+        }
         if (!title.trim()) next.title = 'Title is required'
 
         if (!items.length) {
@@ -310,7 +466,12 @@ export default function QuotationEditor() {
         if (isNew) {
             create.mutate(
                 {
-                    customerUserId,
+                    ...(unregisteredMode
+                        ? {
+                              customerName: customerName.trim(),
+                              customerEmail: customerEmail.trim().toLowerCase(),
+                          }
+                        : { customerUserId }),
                     title: title.trim(),
                     currency,
                     notes: notes.trim() || null,
@@ -333,6 +494,12 @@ export default function QuotationEditor() {
             {
                 id: id!,
                 input: {
+                    ...(contactEditable && unregisteredMode
+                        ? {
+                              customerName: customerName.trim(),
+                              customerEmail: customerEmail.trim().toLowerCase(),
+                          }
+                        : {}),
                     title: title.trim(),
                     currency,
                     notes: notes.trim() || null,
@@ -391,11 +558,25 @@ export default function QuotationEditor() {
                     title={isNew ? 'New quotation' : quote!.number}
                     description={
                         isNew
-                            ? 'Create a customer-specific quote with services, packages, and optional items.'
-                            : `${STATUS_LABELS[quote!.status]} · ${quote!.customer?.displayName ?? 'Customer'}`
+                            ? 'Create a customer-specific quote, or import an aventure-inquiry.json attachment from an inquiry email.'
+                            : `${STATUS_LABELS[quote!.status]} · ${quote!.customer?.displayName || quote!.customerName || 'Customer'}`
                     }
                     actions={
                         <div className="flex flex-wrap items-center gap-2">
+                            {isNew && canManage ? (
+                                <button
+                                    type="button"
+                                    className={ghostActionClass}
+                                    disabled={busy || importingInquiry}
+                                    onClick={() => {
+                                        setImportError(null)
+                                        setImportOpen(true)
+                                    }}
+                                >
+                                    <Upload size={15} />
+                                    Import inquiry
+                                </button>
+                            ) : null}
                             {!isNew && canManage ? (
                                 <button
                                     type="button"
@@ -600,17 +781,94 @@ export default function QuotationEditor() {
                     className="admin-panel grid gap-5 rounded-[3px] p-4 lg:grid-cols-2"
                 >
                     <div className="space-y-3">
-                        {(isNew || selectedCustomer) && (
+                        {(isNew || selectedCustomer || unregisteredMode || quote) && (
                             <div>
                                 <span className={labelClass}>Customer</span>
-                                <CustomerPicker
-                                    value={customerUserId}
-                                    selected={selectedCustomer}
-                                    onChange={handleCustomerChange}
-                                    invalid={attempted && Boolean(errors.customer)}
-                                    disabled={!canManage || !editable}
-                                    readOnly={!isNew}
-                                />
+                                {unregisteredMode ? (
+                                    <div className="space-y-3 rounded-[3px] border border-admin-border bg-admin-surface p-3">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <p className="text-xs text-ink/55">
+                                                Quoting someone who has not created an account yet. The
+                                                quotation and booking will attach if they later sign up
+                                                with this email.
+                                            </p>
+                                            {contactEditable && canManage ? (
+                                                <button
+                                                    type="button"
+                                                    className="shrink-0 text-xs font-medium text-royal underline decoration-gold-deep underline-offset-2"
+                                                    onClick={clearUnregistered}
+                                                >
+                                                    Search instead
+                                                </button>
+                                            ) : null}
+                                        </div>
+                                        <label className="block">
+                                            <span className={labelClass}>Name</span>
+                                            <input
+                                                className={`${fieldClass} ${invalidFieldClass(attempted && Boolean(errors.customerName))}`}
+                                                value={customerName}
+                                                disabled={!canManage || !contactEditable}
+                                                aria-invalid={
+                                                    attempted && Boolean(errors.customerName)
+                                                        ? true
+                                                        : undefined
+                                                }
+                                                onChange={(event) => {
+                                                    setCustomerName(event.target.value)
+                                                    setErrors((prev) => ({
+                                                        ...prev,
+                                                        customerName: undefined,
+                                                    }))
+                                                }}
+                                            />
+                                            {attempted && errors.customerName ? (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {errors.customerName}
+                                                </p>
+                                            ) : null}
+                                        </label>
+                                        <label className="block">
+                                            <span className={labelClass}>Email</span>
+                                            <input
+                                                type="email"
+                                                className={`${fieldClass} ${invalidFieldClass(attempted && Boolean(errors.customerEmail))}`}
+                                                value={customerEmail}
+                                                disabled={!canManage || !contactEditable}
+                                                aria-invalid={
+                                                    attempted && Boolean(errors.customerEmail)
+                                                        ? true
+                                                        : undefined
+                                                }
+                                                onChange={(event) => {
+                                                    setCustomerEmail(event.target.value)
+                                                    setErrors((prev) => ({
+                                                        ...prev,
+                                                        customerEmail: undefined,
+                                                    }))
+                                                }}
+                                            />
+                                            {attempted && errors.customerEmail ? (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {errors.customerEmail}
+                                                </p>
+                                            ) : null}
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <CustomerPicker
+                                        value={customerUserId}
+                                        selected={selectedCustomer}
+                                        onChange={handleCustomerChange}
+                                        onQuoteUnregistered={
+                                            contactEditable && canManage
+                                                ? handleQuoteUnregistered
+                                                : undefined
+                                        }
+                                        invalid={attempted && Boolean(errors.customer)}
+                                        disabled={!canManage || !editable}
+                                        readOnly={!contactEditable}
+                                    />
+                                )}
                                 {attempted && errors.customer ? (
                                     <p className="mt-1 text-xs text-red-600">{errors.customer}</p>
                                 ) : null}
@@ -655,26 +913,58 @@ export default function QuotationEditor() {
                     </div>
 
                     <div className="flex min-h-0 flex-col gap-3">
-                        <label className="flex min-h-0 flex-1 flex-col">
-                            <span className={labelClass}>Message to customer</span>
-                            <textarea
-                                className={`${fieldClass} min-h-[88px] flex-1 resize-y`}
-                                rows={4}
-                                value={customerMessage}
-                                disabled={!canManage || !editable}
-                                onChange={(event) => setCustomerMessage(event.target.value)}
-                            />
-                        </label>
-                        <label className="block">
-                            <span className={labelClass}>Internal notes</span>
-                            <textarea
-                                className={fieldClass}
-                                rows={2}
-                                value={notes}
-                                disabled={!canManage || !editable}
-                                onChange={(event) => setNotes(event.target.value)}
-                            />
-                        </label>
+                        <div
+                            role="tablist"
+                            aria-label="Customer message and notes"
+                            className={`${segmentGroupClass} w-fit`}
+                        >
+                            {(
+                                [
+                                    { id: 'message' as const, label: 'Message to customer' },
+                                    { id: 'notes' as const, label: 'Internal notes' },
+                                ] as const
+                            ).map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={messageTab === tab.id}
+                                    onClick={() => setMessageTab(tab.id)}
+                                    className={`h-full rounded-[2px] px-3.5 text-sm transition ${
+                                        messageTab === tab.id
+                                            ? segmentActiveClass
+                                            : 'text-ink/55 hover:text-royal'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                        {messageTab === 'message' ? (
+                            <label className="flex min-h-0 flex-1 flex-col">
+                                <span className="sr-only">Message to customer</span>
+                                <textarea
+                                    className={`${fieldClass} min-h-[220px] flex-1 resize-y leading-relaxed`}
+                                    rows={10}
+                                    value={customerMessage}
+                                    disabled={!canManage || !editable}
+                                    placeholder="Optional note shown to the customer on the quotation"
+                                    onChange={(event) => setCustomerMessage(event.target.value)}
+                                />
+                            </label>
+                        ) : (
+                            <label className="flex min-h-0 flex-1 flex-col">
+                                <span className="sr-only">Internal notes</span>
+                                <textarea
+                                    className={`${fieldClass} min-h-[220px] flex-1 resize-y leading-relaxed`}
+                                    rows={10}
+                                    value={notes}
+                                    disabled={!canManage || !editable}
+                                    placeholder="Staff-only notes from the inquiry or planning details"
+                                    onChange={(event) => setNotes(event.target.value)}
+                                />
+                            </label>
+                        )}
                     </div>
                 </div>
 
@@ -946,6 +1236,17 @@ export default function QuotationEditor() {
                 quotation={quote ?? null}
                 open={shareOpen}
                 onClose={() => setShareOpen(false)}
+            />
+            <ImportInquiryDialog
+                open={importOpen}
+                busy={importingInquiry}
+                error={importError}
+                onClose={() => {
+                    if (importingInquiry) return
+                    setImportOpen(false)
+                    setImportError(null)
+                }}
+                onImport={(file) => void applyInquiryImport(file)}
             />
         </div>
     )

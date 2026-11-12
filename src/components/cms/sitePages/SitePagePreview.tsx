@@ -82,7 +82,11 @@ function TitledGrid({ items }: { items: { title: string; description: string }[]
 }
 
 export function AboutPreview({ content }: { content: AboutPageContent }) {
-    const { whyUs, founder, origin, transparency } = content
+    const { whyUs, founder, partner, origin, transparency } = content
+    const partnerParagraphs = partner.bio.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean)
+    const [partnerLead, ...partnerRest] = partnerParagraphs
+    const partnerClosing = partnerRest.length > 0 ? partnerRest[partnerRest.length - 1] : undefined
+    const partnerMiddle = partnerRest.length > 1 ? partnerRest.slice(0, -1) : []
     return (
         <PreviewFrame>
             <div className="px-6 py-12 sm:px-10">
@@ -114,6 +118,23 @@ export function AboutPreview({ content }: { content: AboutPageContent }) {
                     <p className={`mt-6 ${proseClass}`}>{founder.story}</p>
                     <p className={`mt-4 ${proseClass}`}>{founder.whyItMatters}</p>
                     <blockquote className="mt-10 text-center font-noto-serif text-2xl font-semibold italic text-royal">“{founder.quote}”</blockquote>
+                    <div className="mt-12 border-t border-royal/15 pt-10">
+                        <p className="text-xs font-medium uppercase tracking-[0.24em] text-gold-deep">{partner.caption}</p>
+                        <p className="mt-3 font-noto-serif text-3xl font-semibold text-royal">{partner.name}</p>
+                        <div className="mt-4 h-px w-14 bg-gold-deep" />
+                        <p className="mt-3 text-sm text-ink/55">{partner.role}</p>
+                        {partnerLead ? <p className="mt-6 text-lg leading-8 text-ink/80">{partnerLead}</p> : null}
+                        <div className={`mt-5 space-y-4 ${proseClass}`}>
+                            {partnerMiddle.map((paragraph, index) => (
+                                <p key={index}>{paragraph}</p>
+                            ))}
+                            {partnerClosing ? (
+                                <p className="border-l-2 border-gold-deep/50 pl-5 font-noto-serif text-lg italic leading-8 text-royal">
+                                    {partnerClosing}
+                                </p>
+                            ) : null}
+                        </div>
+                    </div>
                 </AboutTab>
 
                 <AboutTab label="Origin">

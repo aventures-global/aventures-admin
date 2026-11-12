@@ -313,7 +313,12 @@ export default function Payments() {
                                             <td className="px-4 py-3 text-ink/65">
                                                 {new Date(payment.paidAt).toLocaleDateString()}
                                             </td>
-                                            <td className="px-4 py-3">{payment.customer?.displayName ?? '—'}</td>
+                                            <td className="px-4 py-3">
+                                                {payment.customer?.displayName ||
+                                                    payment.booking.quotation?.customerName ||
+                                                    payment.booking.quotation?.customerEmail ||
+                                                    '—'}
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <div className="min-w-0">
                                                     <p className="truncate font-medium text-ink">
@@ -384,7 +389,9 @@ export default function Payments() {
                                             navigate(
                                                 canManage && stillOwes
                                                     ? `/clients/payments/new?booking=${encodeURIComponent(booking.id)}`
-                                                    : `/clients/payments?customer=${encodeURIComponent(booking.customerUserId)}`,
+                                                    : booking.customerUserId
+                                                      ? `/clients/payments?customer=${encodeURIComponent(booking.customerUserId)}`
+                                                      : '/clients/payments',
                                             )
                                         }
                                     >
@@ -397,7 +404,12 @@ export default function Payments() {
                                                 </p>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3">{booking.customer?.displayName ?? '—'}</td>
+                                        <td className="px-4 py-3">
+                                            {booking.customer?.displayName ||
+                                                booking.quotation?.customerName ||
+                                                booking.quotation?.customerEmail ||
+                                                '—'}
+                                        </td>
                                         <td className="px-4 py-3 text-right tabular-nums">{booking.total}</td>
                                         <td className="px-4 py-3 text-right tabular-nums">{booking.paid}</td>
                                         <td className="px-4 py-3 text-right tabular-nums">{booking.remaining}</td>

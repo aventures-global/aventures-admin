@@ -9,6 +9,7 @@ import {
     Contact,
     FileText,
     FolderOpen,
+    Gauge,
     Handshake,
     Inbox,
     Layers,
@@ -421,6 +422,21 @@ export const navGroups: NavGroup[] = [
         base: '/insights',
         icon: ChartColumn,
         pages: [
+            {
+                label: 'Dashboard',
+                path: 'dashboard',
+                icon: Gauge,
+                wave: 'later',
+                summary:
+                    "An operational view of the day's work: queues, pipelines, and money at a glance—separate from Home and from historical Reports.",
+                goals: [
+                    "Today's queue: new inquiries, quotations awaiting a reply, and overdue follow-ups",
+                    'Pipeline counts for bookings and visa applications by status',
+                    'Money at a glance: collected and outstanding for the current period',
+                    'Upcoming departures and consultations',
+                    'A staff-scoped "my work" view alongside the company-wide view',
+                ],
+            },
             {
                 label: 'Finance',
                 path: 'finance',

@@ -11,6 +11,8 @@ export default function AboutForm({ value, onChange, showErrors }: AboutFormProp
     const whyUs = (patch: Partial<AboutPageContent['whyUs']>) => onChange({ ...value, whyUs: { ...value.whyUs, ...patch } })
     const founder = (patch: Partial<AboutPageContent['founder']>) =>
         onChange({ ...value, founder: { ...value.founder, ...patch } })
+    const partner = (patch: Partial<AboutPageContent['partner']>) =>
+        onChange({ ...value, partner: { ...value.partner, ...patch } })
     const origin = (patch: Partial<AboutPageContent['origin']>) => onChange({ ...value, origin: { ...value.origin, ...patch } })
     const transparency = (patch: Partial<AboutPageContent['transparency']>) =>
         onChange({ ...value, transparency: { ...value.transparency, ...patch } })
@@ -46,6 +48,20 @@ export default function AboutForm({ value, onChange, showErrors }: AboutFormProp
                 <TextField label="From dreaming to living the dream" rows={4} value={value.founder.story} onChange={(story) => founder({ story })} maxLength={3000} {...field} />
                 <TextField label="Why her story matters" rows={4} value={value.founder.whyItMatters} onChange={(whyItMatters) => founder({ whyItMatters })} maxLength={3000} {...field} />
                 <TextField label="Quote" rows={2} value={value.founder.quote} onChange={(quote) => founder({ quote })} maxLength={400} {...field} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <TextField label="Partner caption" value={value.partner.caption} onChange={(caption) => partner({ caption })} maxLength={60} {...field} />
+                    <TextField label="Partner name" value={value.partner.name} onChange={(name) => partner({ name })} maxLength={120} {...field} />
+                </div>
+                <TextField label="Partner role" value={value.partner.role} onChange={(role) => partner({ role })} maxLength={120} {...field} />
+                <TextField
+                    label="Partner bio"
+                    rows={8}
+                    value={value.partner.bio}
+                    onChange={(bio) => partner({ bio })}
+                    maxLength={4000}
+                    hint="Separate paragraphs with a blank line."
+                    {...field}
+                />
             </FormSection>
 
             <FormSection title="Origin tab">

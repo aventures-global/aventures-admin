@@ -219,7 +219,16 @@ export default function Quotations() {
                                         >
                                             <td className="px-3 py-2.5 font-medium text-ink">{quote.number}</td>
                                             <td className="px-3 py-2.5 text-ink/75">
-                                                {quote.customer?.displayName ?? '—'}
+                                                <span className="block">
+                                                    {quote.customer?.displayName ||
+                                                        quote.customerName ||
+                                                        '—'}
+                                                </span>
+                                                {!quote.accountLinked ? (
+                                                    <span className="mt-0.5 block text-xs text-ink/45">
+                                                        No account yet
+                                                    </span>
+                                                ) : null}
                                             </td>
                                             <td className="px-3 py-2.5 text-ink/75">{quote.title}</td>
                                             <td className="px-3 py-2.5">

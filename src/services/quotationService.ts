@@ -45,6 +45,9 @@ export type Quotation = {
     title: string
     notes: string | null
     customerMessage: string | null
+    customerName: string
+    customerEmail: string
+    accountLinked: boolean
     validUntil: string | null
     subtotalCents: number
     optionalCents: number
@@ -100,7 +103,9 @@ export type QuotationItemInput = {
 }
 
 export type QuotationCreateInput = {
-    customerUserId: string
+    customerUserId?: string
+    customerName?: string
+    customerEmail?: string
     title: string
     currency?: string
     notes?: string | null
@@ -110,6 +115,8 @@ export type QuotationCreateInput = {
 }
 
 export type QuotationUpdateInput = {
+    customerName?: string
+    customerEmail?: string
     title?: string
     currency?: string
     notes?: string | null

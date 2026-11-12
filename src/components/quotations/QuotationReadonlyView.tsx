@@ -106,10 +106,17 @@ export default function QuotationReadonlyView({ quotation: quote }: QuotationRea
                                 {quote.customer.displayName}
                             </Link>
                         ) : (
-                            '—'
+                            <span className="font-medium text-ink">
+                                {quote.customerName || quote.customerEmail || '—'}
+                            </span>
                         )}
-                        {quote.customer?.email ? (
-                            <span className="mt-0.5 block text-xs text-ink/50">{quote.customer.email}</span>
+                        <span className="mt-0.5 block text-xs text-ink/50">
+                            {quote.customer?.email ?? quote.customerEmail}
+                        </span>
+                        {!quote.accountLinked ? (
+                            <span className="mt-1 block text-xs text-ink/45">
+                                No account yet — links if they sign up with this email
+                            </span>
                         ) : null}
                     </MetaRow>
                     <MetaRow label="Currency">{quote.currency}</MetaRow>

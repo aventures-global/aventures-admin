@@ -13,10 +13,17 @@ export type BookingPerson = {
 
 export type Booking = {
     id: string
-    customerUserId: string
+    customerUserId: string | null
     customer: BookingPerson | null
     quotationId: string | null
-    quotation: { id: string; number: string; title: string; status?: string } | null
+    quotation: {
+        id: string
+        number: string
+        title: string
+        status?: string
+        customerName?: string
+        customerEmail?: string
+    } | null
     status: string
     paymentStatus: BookingPaymentStatus
     isOverdue: boolean

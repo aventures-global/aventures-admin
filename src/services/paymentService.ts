@@ -15,7 +15,7 @@ export type PaymentPerson = {
 export type Payment = {
     id: string
     bookingId: string
-    customerUserId: string
+    customerUserId: string | null
     customer: PaymentPerson | null
     amountCents: number
     amount: string
@@ -43,7 +43,13 @@ export type Payment = {
         remaining: string
         currency: string
         dueAt: string | null
-        quotation: { id: string; number: string; title: string } | null
+        quotation: {
+            id: string
+            number: string
+            title: string
+            customerName?: string
+            customerEmail?: string
+        } | null
         customer: PaymentPerson | null
     }
     createdAt: string

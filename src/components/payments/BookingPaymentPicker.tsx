@@ -77,7 +77,12 @@ export default function BookingPaymentPicker({
                 <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{selectedBooking.title}</p>
                     <p className="mt-0.5 truncate text-xs text-ink/55">
-                        {[selectedBooking.customer?.displayName, selectedBooking.quotation?.number]
+                        {[
+                            selectedBooking.customer?.displayName ||
+                                selectedBooking.quotation?.customerName ||
+                                selectedBooking.quotation?.customerEmail,
+                            selectedBooking.quotation?.number,
+                        ]
                             .filter(Boolean)
                             .join(' · ') || 'No customer'}
                     </p>
@@ -197,7 +202,12 @@ export default function BookingPaymentPicker({
                                             {booking.title}
                                         </span>
                                         <span className="truncate text-xs text-ink/55">
-                                            {[booking.customer?.displayName, booking.quotation?.number]
+                                            {[
+                                                booking.customer?.displayName ||
+                                                    booking.quotation?.customerName ||
+                                                    booking.quotation?.customerEmail,
+                                                booking.quotation?.number,
+                                            ]
                                                 .filter(Boolean)
                                                 .join(' · ') || 'No customer'}
                                         </span>

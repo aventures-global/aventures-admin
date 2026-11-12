@@ -62,6 +62,7 @@ export default function CustomerPicker({
     value,
     selected,
     onChange,
+    onQuoteUnregistered,
     invalid = false,
     disabled = false,
     readOnly = false,
@@ -69,6 +70,8 @@ export default function CustomerPicker({
     value: string
     selected: CustomerOption | null
     onChange: (next: CustomerOption | null) => void
+    /** Shown when search returns no registered customers. */
+    onQuoteUnregistered?: (searchText: string) => void
     invalid?: boolean
     disabled?: boolean
     readOnly?: boolean
@@ -229,7 +232,24 @@ export default function CustomerPicker({
                     }`}
                 >
                     {results.length === 0 ? (
-                        <li className="px-3 py-2 text-xs text-ink/50">No customers match.</li>
+                        <li className="px-3 py-2">
+                            <p className="text-xs text-ink/50">No customers match.</p>
+                            {onQuoteUnregistered && !isFetching ? (
+                                <button
+                                    type="button"
+                                    className="mt-2 w-full rounded-[3px] border border-royal/20 bg-royal/[0.04] px-3 py-2 text-left text-sm font-medium text-royal transition hover:border-royal/40 hover:bg-royal/[0.08]"
+                                    onMouseDown={(event) => event.preventDefault()}
+                                    onClick={() => {
+                                        onQuoteUnregistered(debounced)
+                                        setQuery('')
+                                        setDebounced('')
+                                        setOpen(false)
+                                    }}
+                                >
+                                    Quote an unregistered customer
+                                </button>
+                            ) : null}
+                        </li>
                     ) : (
                         results.map((user, index) => {
                             const active = index === highlight
