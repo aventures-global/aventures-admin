@@ -6,6 +6,7 @@ export const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 export const EMPTY_TOUR: TourInput = {
     slug: '',
     title: '',
+    shortTitle: '',
     tagline: '',
     shortDescription: '',
     coverImage: '',
@@ -22,6 +23,7 @@ export function toDraft(tour: Tour): TourInput {
     const { id, sortOrder, updatedAt, ...input } = tour
     return {
         ...input,
+        shortTitle: input.shortTitle ?? '',
         experiences: input.experiences.length
             ? input.experiences.map((experience, index) => ({
                   ...EMPTY_EXPERIENCE,
@@ -48,6 +50,7 @@ export function cleanDraft(draft: TourInput): TourInput {
         ...draft,
         slug: draft.slug.trim(),
         title: draft.title.trim(),
+        shortTitle: (draft.shortTitle ?? '').trim().slice(0, 40),
         tagline: draft.tagline.trim(),
         shortDescription: draft.shortDescription.trim(),
         coverImage: draft.coverImage.trim(),

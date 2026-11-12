@@ -6,9 +6,16 @@ import SafeImage from '../../ui/SafeImage'
 type DestinationCardProps = {
     tour: TourSummary
     lifted?: boolean
+    featuring?: boolean
+    onToggleFeatured?: (tour: TourSummary) => void
 }
 
-export default function DestinationCard({ tour, lifted = false }: DestinationCardProps) {
+export default function DestinationCard({
+    tour,
+    lifted = false,
+    featuring = false,
+    onToggleFeatured,
+}: DestinationCardProps) {
     return (
         <div
             className={`group relative block overflow-hidden rounded-xl border transition-colors duration-500 ${
@@ -24,7 +31,34 @@ export default function DestinationCard({ tour, lifted = false }: DestinationCar
                 imgClassName={`object-cover ${cardCoverFocus(tour.id)} transition duration-700 group-hover:scale-[1.04]`}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/25" />
-            {tour.featured ? (
+            {onToggleFeatured ? (
+                <button
+                    type="button"
+                    disabled={featuring}
+                    aria-pressed={tour.featured}
+                    aria-label={tour.featured ? 'Remove from featured' : 'Mark as featured'}
+                    title={tour.featured ? 'Remove from featured' : 'Mark as featured'}
+                    onClick={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        onToggleFeatured(tour)
+                    }}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    className={`absolute left-3.5 top-3.5 z-10 inline-flex items-center gap-1 rounded-full border backdrop-blur-sm transition disabled:opacity-60 ${
+                        tour.featured
+                            ? 'border-gold/40 bg-black/50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-gold'
+                            : 'border-gold/30 bg-black/40 p-1.5 text-gold/70 hover:border-gold/50 hover:text-gold'
+                    }`}
+                >
+                    <Star
+                        size={tour.featured ? 10 : 14}
+                        strokeWidth={2}
+                        className={tour.featured ? 'fill-gold' : featuring ? 'animate-pulse' : ''}
+                        aria-hidden
+                    />
+                    {tour.featured ? 'Featured' : null}
+                </button>
+            ) : tour.featured ? (
                 <span className="absolute left-3.5 top-3.5 inline-flex items-center gap-1 rounded-full border border-gold/40 bg-black/50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-gold backdrop-blur-sm">
                     <Star size={10} strokeWidth={2} className="fill-gold" aria-hidden />
                     Featured

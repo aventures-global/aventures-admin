@@ -7,17 +7,19 @@ import DestinationFilters from '../../components/cms/destinations/DestinationFil
 import DestinationTable from '../../components/cms/destinations/DestinationTable'
 import LoadMoreSentinel from '../../components/cms/destinations/LoadMoreSentinel'
 import { defaultDir, useDestinationFilters } from '../../hooks/useDestinationFilters'
-import { useMoveTour, useTourSearch } from '../../hooks/useTours'
+import { useMoveTour, useTourSearch, useUpdateTour } from '../../hooks/useTours'
 import { primaryActionClass } from '../../lib/formStyles'
 import type { TourMove } from '../../services/tourService'
-import type { TourSort } from '../../types/tour'
+import type { TourSort, TourSummary } from '../../types/tour'
 
 export default function Destinations() {
     const { filters, view, update, hasFilters, clearFilters } = useDestinationFilters()
     const { data, isPending, isError, error, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
         useTourSearch(filters)
     const moveTour = useMoveTour()
+    const updateTour = useUpdateTour()
     const [notice, setNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null)
+    const [featuringSlug, setFeaturingSlug] = useState<string | null>(null)
 
     const tours = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data])
     const total = data?.pages[0]?.total ?? 0
@@ -43,6 +45,25 @@ export default function Destinations() {
             {
                 onSuccess: () => setNotice({ tone: 'ok', text: 'Order saved' }),
                 onError: (err) => setNotice({ tone: 'error', text: err.message }),
+            },
+        )
+    }
+
+    const handleToggleFeatured = (tour: TourSummary) => {
+        if (featuringSlug) return
+        setFeaturingSlug(tour.slug)
+        updateTour.mutate(
+            { slug: tour.slug, input: { featured: !tour.featured } },
+            {
+                onSuccess: (saved) =>
+                    setNotice({
+                        tone: 'ok',
+                        text: saved.featured
+                            ? 'Featured on the home page'
+                            : 'Removed from featured',
+                    }),
+                onError: (err) => setNotice({ tone: 'error', text: err.message }),
+                onSettled: () => setFeaturingSlug(null),
             },
         )
     }
@@ -167,10 +188,18 @@ export default function Destinations() {
                         tours={tours}
                         sort={filters.sort}
                         dir={filters.dir}
+                        featuringSlug={featuringSlug}
                         onSort={toggleSort}
+                        onToggleFeatured={handleToggleFeatured}
                     />
                 ) : (
-                    <DestinationCardGrid tours={tours} sortable={sortable} onMove={handleMove} />
+                    <DestinationCardGrid
+                        tours={tours}
+                        sortable={sortable}
+                        featuringSlug={featuringSlug}
+                        onMove={handleMove}
+                        onToggleFeatured={handleToggleFeatured}
+                    />
                 )}
 
                 {!isPending && !isError ? (

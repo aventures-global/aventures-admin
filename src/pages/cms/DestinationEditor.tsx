@@ -53,6 +53,7 @@ import {
 
 type SetField = <K extends keyof TourInput>(field: K, value: TourInput[K]) => void
 
+const FEATURED_LIMIT = 3
 const container = 'mx-auto w-full max-w-[84rem] px-6 @2xl:px-8 @5xl:px-12'
 const lightEdit = 'bg-white/80'
 const darkEdit = 'bg-black/30'
@@ -244,6 +245,8 @@ function Editor({ tour }: { tour: Tour | null }) {
     }
 
     const location = draft.location || 'this destination'
+    const otherFeatured = allTours.filter((item) => item.featured && item.id !== tour?.id).length
+    const willReplaceOldest = !draft.featured && otherFeatured >= FEATURED_LIMIT
 
     return (
         <div>
@@ -282,7 +285,7 @@ function Editor({ tour }: { tour: Tour | null }) {
                         </p>
                     ) : null}
                 </div>
-                <div className="sm:self-start">
+                <div>
                     <label htmlFor="destination-region" className={labelClass}>
                         Region
                     </label>
@@ -310,6 +313,11 @@ function Editor({ tour }: { tour: Tour | null }) {
                 <button
                     type="button"
                     aria-pressed={draft.featured}
+                    title={
+                        willReplaceOldest
+                            ? 'Saving will replace the destination that has been featured the longest.'
+                            : undefined
+                    }
                     onClick={() => setField('featured', !draft.featured)}
                     className={`${filterChipClass} py-2 ${
                         draft.featured ? filterChipActiveClass : filterChipInactiveClass
@@ -323,7 +331,29 @@ function Editor({ tour }: { tour: Tour | null }) {
                     />
                     {draft.featured ? 'Featured on home page' : 'Not featured'}
                 </button>
-                <div className="sm:col-span-3">
+                {willReplaceOldest ? (
+                    <p className="text-xs leading-5 text-ink/55 sm:col-span-3">
+                        Three destinations are already featured on the home page. Saving this as
+                        featured will replace the one that has been featured the longest.
+                    </p>
+                ) : null}
+                <div>
+                    <label htmlFor="destination-short-title" className={labelClass}>
+                        Short title
+                    </label>
+                    <input
+                        id="destination-short-title"
+                        value={draft.shortTitle}
+                        maxLength={40}
+                        placeholder="Kyoto, Palawan, Europe"
+                        onChange={(event) => setField('shortTitle', event.target.value)}
+                        className={fieldClass}
+                    />
+                    <p className="mt-1.5 text-xs leading-5 text-ink/55">
+                        Home showcase label. Leave blank to use the full title.
+                    </p>
+                </div>
+                <div className="sm:col-span-2">
                     <label htmlFor="destination-seo" className={labelClass}>
                         SEO description
                     </label>

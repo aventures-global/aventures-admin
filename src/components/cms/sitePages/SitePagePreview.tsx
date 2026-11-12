@@ -128,12 +128,12 @@ export function AboutPreview({ content }: { content: AboutPageContent }) {
                             {partnerMiddle.map((paragraph, index) => (
                                 <p key={index}>{paragraph}</p>
                             ))}
-                            {partnerClosing ? (
-                                <p className="border-l-2 border-gold-deep/50 pl-5 font-noto-serif text-lg italic leading-8 text-royal">
-                                    {partnerClosing}
-                                </p>
-                            ) : null}
                         </div>
+                        {partnerClosing ? (
+                            <blockquote className="mt-10 text-center font-noto-serif text-2xl font-semibold italic text-royal">
+                                “{partnerClosing}”
+                            </blockquote>
+                        ) : null}
                     </div>
                 </AboutTab>
 

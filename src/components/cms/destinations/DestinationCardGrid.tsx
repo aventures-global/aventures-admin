@@ -27,12 +27,20 @@ import DestinationCard from './DestinationCard'
 type DestinationCardGridProps = {
     tours: TourSummary[]
     sortable: boolean
+    featuringSlug?: string | null
     onMove: (move: { slug: string; from: number; to: number; move: TourMove }) => void
+    onToggleFeatured: (tour: TourSummary) => void
 }
 
 const gridClass = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'
 
-export default function DestinationCardGrid({ tours, sortable, onMove }: DestinationCardGridProps) {
+export default function DestinationCardGrid({
+    tours,
+    sortable,
+    featuringSlug = null,
+    onMove,
+    onToggleFeatured,
+}: DestinationCardGridProps) {
     const [activeSlug, setActiveSlug] = useState<string | null>(null)
     const suppressClickRef = useRef(false)
 
@@ -99,7 +107,9 @@ export default function DestinationCardGrid({ tours, sortable, onMove }: Destina
                             key={tour.id}
                             tour={tour}
                             sortable={sortable}
+                            featuring={featuringSlug === tour.slug}
                             onClickCapture={guardClick}
+                            onToggleFeatured={onToggleFeatured}
                         />
                     ))}
                 </div>
@@ -118,11 +128,15 @@ export default function DestinationCardGrid({ tours, sortable, onMove }: Destina
 function SortableCard({
     tour,
     sortable,
+    featuring,
     onClickCapture,
+    onToggleFeatured,
 }: {
     tour: TourSummary
     sortable: boolean
+    featuring: boolean
     onClickCapture: (event: MouseEvent) => void
+    onToggleFeatured: (tour: TourSummary) => void
 }) {
     const { setNodeRef, listeners, attributes, transform, transition, isDragging } = useSortable({
         id: tour.slug,
@@ -146,7 +160,11 @@ function SortableCard({
                 }`}
                 {...(sortable ? listeners : {})}
             >
-                <DestinationCard tour={tour} />
+                <DestinationCard
+                    tour={tour}
+                    featuring={featuring}
+                    onToggleFeatured={onToggleFeatured}
+                />
             </Link>
         </div>
     )
